@@ -35,7 +35,7 @@ int main()
 	  {
 	    candidate = arr[i];
 	  }
-	  else if (candidate = arr[i])
+	  else if (candidate == arr[i])
 	  {
 	   count++;
 	  }
