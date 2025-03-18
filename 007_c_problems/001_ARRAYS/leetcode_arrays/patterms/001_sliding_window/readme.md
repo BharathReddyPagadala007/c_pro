@@ -1,4 +1,3 @@
----
 
 ### **Fixed Size Sliding Window**
 1. **Maximum sum of a subarray of size `k`**  
@@ -25,7 +24,6 @@
      Output: [2.2, 2.8, 2.4, 3.6, 2.8]
      ```
 
----
 
 ### **Variable Size Sliding Window**
 4. **Smallest subarray with a sum greater than `S`**  
