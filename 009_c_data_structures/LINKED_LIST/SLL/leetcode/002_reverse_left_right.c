@@ -114,7 +114,45 @@ struct Node* reverse(struct Node** phead){
 	return prev;
 }
 
-struct Node* reverse_left_right(struct Node** phead, ){
+struct Node* reverse_left_right(struct Node** phead,int left, int right ){
+
+	struct Node dummy ;
+	dummy = **phead;
+
+	struct Node* prevLeft = &dummy;
+
+	for(int i=1; i<left; i++){
+		prevLeft = prevLeft->next;
+	}
+
+	struct Node* const reverseHead= prevLeft;  // this is node that points to starting node of reversed list (after reversal)
+					       //
+					   
+       struct Node* currNode = prevLeft->next;	//before reversal start of sublist
+
+       struct Node* nextNode = NULL;
+       struct Node* prevNode = NULL;     // prevNode, currNode, nextNode
+
+       for(int i=0; i<=right-left; i++){
+
+	       //n cn
+	       //pcn
+	      nextNode       = currNode->next;
+	      currNode->next =  prevNode;
+	      prevNode       =  currNode;
+	      currNode       =  nextNode;
+       
+       }
+
+
+       reverseHead->next->next = currNode; // this connects the last link in the origina link to the end of sublist
+       reverseHead->next       = prevNode; // this connects the left part of original link to first node of the sublist after reversal
+					   //
+
+
+
+       return dummy.next;
+
 
 
 
@@ -142,7 +180,9 @@ int main(){
 	display_list(&head);
 
 	display_from_to(&head,2,6);
-	
+	reverse_left_right(&head,2,6);	
+	display_list(&head);
+	display_from_to(&head,2,6);
 
 return 0;
 }
