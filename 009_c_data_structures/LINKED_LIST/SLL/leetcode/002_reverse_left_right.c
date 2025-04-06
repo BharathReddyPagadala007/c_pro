@@ -76,7 +76,7 @@ void display_from_to(struct Node** phead,int left, int right)                   
 	printf("print from %d to %d\n",left,right);
         struct Node* p = *phead;                                                                                                                                
 
-	int l=0,r=0;
+	int l=1,r=1;
 	while(l<left){
 		p =p->next;
 		l++;
@@ -117,11 +117,11 @@ struct Node* reverse(struct Node** phead){
 struct Node* reverse_left_right(struct Node** phead,int left, int right ){
 
 	struct Node dummy ;
-	dummy = **phead;
+	dummy.next = *phead;
 
 	struct Node* prevLeft = &dummy;
 
-	for(int i=1; i<left; i++){
+	for(int i=1; i<left; ++i){
 		prevLeft = prevLeft->next;
 	}
 
@@ -133,7 +133,7 @@ struct Node* reverse_left_right(struct Node** phead,int left, int right ){
        struct Node* nextNode = NULL;
        struct Node* prevNode = NULL;     // prevNode, currNode, nextNode
 
-       for(int i=0; i<=right-left; i++){
+       for(int i=0; i<=right-left; ++i){
 
 	       //n cn
 	       //pcn
@@ -176,8 +176,8 @@ int main(){
 	insert_at_end(&head,20);
 
 	display_list(&head);
-	head= reverse(&head);
-	display_list(&head);
+	//head= reverse(&head);
+	//display_list(&head);
 
 	display_from_to(&head,2,6);
 	reverse_left_right(&head,2,6);	
