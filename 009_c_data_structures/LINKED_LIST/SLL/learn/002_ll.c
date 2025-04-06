@@ -45,7 +45,8 @@ void insert_at_end(struct Node** phead, int data)
 {
    
 	struct Node* newNode = create_node(data);
-	struct Node* p = *phead;
+	struct Node* p = *phead; //segmentation fault
+				 // if(*phead == NULL) { *phead = newNode; return;}
 
 	while(p->next!=NULL)
 	{

@@ -9,6 +9,7 @@ struct Node{
 
 
 
+//-----------------------------------------------------------------------
 void insert_at_end(struct Node** phead, int value){
 	struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
 	newNode->data = value;
@@ -33,6 +34,7 @@ void insert_at_end(struct Node** phead, int value){
 }
 
 
+//-----------------------------------------------------------------------
 void display_forward(struct Node* head){
 
 
@@ -47,6 +49,8 @@ void display_forward(struct Node* head){
 	printf("NULL \n");
 
 }
+
+//-----------------------------------------------------------------------
 void delete_node(struct Node** phead,int value){
 
 	if(*phead == NULL) return ;
@@ -78,11 +82,9 @@ void delete_node(struct Node** phead,int value){
 
 	free(temp);
 
-
-
-
 }
 
+//-----------------------------------------------------------------------
 int  main(){
 
 	struct Node* head = NULL;

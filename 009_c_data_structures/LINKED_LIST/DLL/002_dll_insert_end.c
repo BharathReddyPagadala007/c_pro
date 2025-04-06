@@ -30,6 +30,7 @@ struct node* create_node(int value){
 }
 
 
+//------------------------------------------------------------------
 
 void insert_at_end(struct node** phead, int value){
 	struct node* new_node = create_node(value);
@@ -59,8 +60,6 @@ void display_forward(struct node * head){
 	
 	}
 	printf("\n");
-
-
 
 }
 
@@ -96,10 +95,6 @@ int main(){
 
 	printf("list (backward:::)::    ");
 	display_backward(head);
-
-
-
-
 
 
 
