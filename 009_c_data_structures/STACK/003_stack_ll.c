@@ -1,3 +1,29 @@
+/*
+ 
+  [  ]--
+      |
+      v
+	
+      [ ]
+          [ ]
+ 		[ ]                   
+		    [  | NULL]
+
+
+  when ur creating thats is pushing ur inserting newNODE AT BEGINNING  and making it  the top st->top holds the newNode addreess
+
+  st->top = newNode;
+
+  ----------------
+  when ur popping ur removing the first(TOP ELEMENT) by making the st->top->next as the TOP element that is element newxt to it
+  andfree(temp)
+
+  st->top = st->top->next;
+  ----------------
+
+
+*/
+
 #include<stdio.h>
 #include<stdlib.h>
 

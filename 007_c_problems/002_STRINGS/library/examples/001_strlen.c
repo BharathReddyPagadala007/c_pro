@@ -13,3 +13,15 @@ int main()
 
 return 0;
 }
+
+
+
+/*
+ *
+$ ./a.out 
+enter a string: 
+bharath reddy pagadala lnux rtos freertos fpga tanga nano 9k beaglke bone black raspberry pi
+lengthe of string :92
+*** stack smashing detected ***: terminated
+Aborted (core dumped)
+*/

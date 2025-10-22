@@ -15,11 +15,15 @@
 //      [0,1,2,3,4,5]   //enqueue rear + 1
 //       |         |
 //       front     rear
-//
+//  
+//  insert or enqueue from rear
+//----------------------------------------------------
 //
 //      [0,1,2,3,4,5]   //dequeue  front + 1
 //         |       |
 //       front     rear
+//
+//   remove or dequeue from front 
 //
 ////////////////////////////////////////////////////
 

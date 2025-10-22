@@ -13,7 +13,13 @@ int main()
 
 //////////////////////////////////////////
 
-  if(strcmp(str1,str2));
+
+  if(strncmp(str1,str2,5)==0){
+    printf("both strings are same\n");
+  }else{
+  printf("differnmcetr\n");
+  }
+
 
 return 0;
 }

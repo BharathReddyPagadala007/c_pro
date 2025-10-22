@@ -48,7 +48,7 @@ void push(int value)
 	
   if(top == MAX -1)
   {
-    printf("the stack is empty cant push  -->%d cant be pushed\n", value);
+    printf("the stack is FULL , cant push  -->%d cant be pushed\n", value);
   }
   else
   {
@@ -67,11 +67,12 @@ void display()
 	
 	}
 	else{
-  for(i=0;i<= top ;i++) //condition is top not MAX -1 as it is meant to print only upto elements that existing
-  {
-    printf("%d\n",stack[i]); 
+  		for(i=0;i<= top ;i++) //condition is top not MAX -1 as it is meant to print only upto elements that existing
+  		{		
+		    printf("%d\n",stack[i]); 
   
-  }}
+ 		 }
+	}
 
 }
 /////////////////////////////////////
