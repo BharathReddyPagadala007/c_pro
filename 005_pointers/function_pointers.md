@@ -1,5 +1,7 @@
 Function pointers in C programming allow you to store the address of a function in a pointer, enabling you to call a function indirectly or dynamically determine which function to call at runtime. This is particularly useful for implementing callback mechanisms, event-driven systems, and for dynamic dispatch in certain situations.
 
+---
+
 ### Declaring and Using Function Pointers
 
 Here is a step-by-step explanation of function pointers:
