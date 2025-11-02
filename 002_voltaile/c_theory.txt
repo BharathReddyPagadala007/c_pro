@@ -1,0 +1,4240 @@
+//all string , comparision, memeory copy functions
+// all input output functions
+
+
+
+
+Compiler converts a C program into an executable. There are four phases for a C program to become an executable:
+Pre-processing
+Compilation
+Assembly
+Linking
+
+gcc options:
+-save-temps              Do not delete intermediate files.
+-time                    Time the execution of each subprocess
+-E                       Preprocess only; do not compile, assemble or link.
+-S                       Compile only; do not assemble or link.
+-c                       Compile and assemble, but do not link.
+-shared                  Create a shared library.
+-o <file>                Place the output into <file>.
+
+invoke the linker with a flag such as the gcc -fno-common flag, which triggers an error if it encounters multiple defined global symbols.
+
+
+
+The preprocessed output is stored in the filename.i
+The next step is to compile filename.i and produce an; intermediate compiled output file filename.s. This file is in assembly level instructions.
+filename.s is taken as input and turned into filename.o by assembler. This file contain machine level instructions. At this phase, only existing code is converted into machine language, the function calls like printf() 
+This is the final phase in which all the linking of function calls with their definitions are done. Linker knows where all these functions are implemented. Linker does some extra work also, it adds some extra code to our program which is required when the program starts and ends. For example, there is a code which is required for setting up the environment like passing command line arguments. This task can be easily verified by using $size filename.o and $size filename. Through these commands, we know that how output file increases from an object file to an executable file. This is because of the extra code that linker adds with our program.
+
+
+much simpler language called binary language, but a programmer can not write the whole program with its complexity in a binary language therefore we need a program that can convert the human written language (assembly language) into binary language
+
+compilers are platform dependent.“Compilers turns the high level language to binary language or machine code(its compiler not he compiling staage which converts .i to .s) at only time once”.
+
+
+interpreter occupies less memory.Compilers usually generate an intermediate code called object code, during the compilation process. Hence it requires more memory than interpreters. Unlike compilers, interpreters do not generate any intermediate code, during the interpretation process. Thus, interpreters are memory efficient
+Also, a compiler saves the machine codes for future use permanently but an interpreter doesn’t, but an interpreter occupies less memory.
+
+Linker is a program that holds one or more object files which is created by compiler, combines them into one executable file.Linking is implemented  at both time,load time and compile time. Compile time is when high level language is turns to machine code and load time is when the code is loaded into the memory by loader.
+Linker is of two types:
+1.Dynamic Linker: implemented during run time. requires less memory. error and failure chances. stored the program in virtual memory to save RAM,So we have need to shared library
+2.Static Linker: implemented during compilation of source program.requires more memory. faster and portable. less chances to error and No chances to failure.
+
+Loader is a program that loads machine codes of a program into the system memory.It is part of the OS of the computer that is responsible for loading the program. It is the bare beginning of the execution of a program. Loading a program involves reading the contents of executable file( executable file is executable code ,which linker makes as an output  ) into memory. Only after the program is loaded the operating system starts the program by passing control to the loaded program code. All the OS that support loading have loader and many have loaders permanently in their memory.
+
+
+compiler_alignment:
+Object File Alignment, Section Alignment, Page Alignment
+
+The stack is also memory. The system programmer should load the stack pointer with a memory address that is properly aligned. Generally, the processor won’t check stack alignment, it is the programmer’s responsibility to ensure proper alignment of stack memory. Any misalignment will cause run time surprises.
+For example, if the processor word length is 32 bit, stack pointer also should be aligned to be multiple of 4 bytes.
+If char data is placed in a bank other bank 0, it will be placed on wrong data lines during memory read. How the processor handles char type?
+Usually, the processor will recognize the data type based on instruction.Depending on the bank it is stored, the processor shifts the byte onto least significant data lines.
+When arguments passed on stack, are they subjected to alignment?
+Yes. The compiler helps programmer in making proper alignment. For example, if a 16-bit value is pushed onto a 32-bit wide stack, the value is automatically padded with zeros out to 32 bits. Consider the following program.
+void argument_alignment_check( char c1, char c2 )
+{
+   // Considering downward stack
+   // (on upward stack the output will be negative)
+   printf("Displacement %d\n", (int)&c2 - (int)&c1);
+}
+The output will be 4 on a 32 bit machine. It is because each character occupies 4 bytes due to alignment requirements.
+What will happen if we try to access a misaligned data?
+It depends on processor architecture. If the access is misaligned, the processor automatically issues sufficient memory read cycles and packs the data properly onto the data bus. The penalty is on performance. Where as few processors will not have last two address lines, which means there is no-way to access odd byte boundary. Every data access must be aligned (4 bytes) properly. A misaligned access is critical exception on such processors. If the exception is ignored, read data will be incorrect and hence the results.
+Is there any way to query alignment requirements of a data type?
+
+
+How Linkers Resolve Global Symbols Defined at Multiple Places?
+At compile time, the compiler exports each global symbol to the assembler as either strong or weak, and the assembler encodes this information implicitly in the symbol table of the relocatable object file. Functions and initialized global variables get strong symbols. Uninitialized global variables get weak symbols.
+Given this notion of strong and weak symbols, Unix linkers use the following rules for dealing with multiple defined symbols:
+Rule 1: Multiple strong symbols (with same variable name) are not allowed.
+Rule 2: Given a strong symbol and multiple weak symbols, choose the strong symbol.
+Rule 3: Given multiple weak symbols, choose any of the weak symbols.
+
+For example, suppose we attempt to compile and link the following two C modules:
+
+/* foo1.c */
+int main()
+{
+  return 0;
+}
+
+/* bar1.c */
+int main()
+{
+  return 0;
+}
+In this case, the linker will generate an error message because the strong symbol main is defined multiple times (rule 1):multiple definition of ‘main’.
+
+Similarly, the linker will generate an error message for the following modules because the strong symbol x is defined twice (rule 1):
+
+/* foo2.c */
+int x = 15213;
+int main()
+{
+  return 0;
+}
+
+/* bar2.c */
+int x = 15213;
+void f()
+{
+}
+
+However, if x is uninitialized in one module, then the linker will quietly choose the strong symbol defined in the other (rule 2) as is the case in following program:
+
+/* foo3.c */
+#include <stdio.h>
+void f(void);
+int x = 15213;
+int main()
+{
+  f();
+  printf("x = %d\n", x);
+  return 0;
+}
+
+/* bar3.c */
+int x;
+void f()
+{
+  x = 15212;
+}
+At run time, function f() changes the value of x from 15213 to 15212, which might come as a unwelcome surprise to the author of function main! Notice that the linker normally gives no indication that it has detected multiple definitions of x.
+
+$ gcc -o gfg foo3.c bar3.c
+$ ./gfg
+x = 15212
+
+The same thing can happen if there are two weak definitions of x (rule 3):
+
+/*a.c*/
+#include <stdio.h>
+void b(void);
+
+int x;
+int main()
+{
+    x = 2016;
+    b();
+    printf("x = %d ",x);
+    return 0;
+}
+/*b.c*/
+#include <stdio.h>
+
+int x;
+
+void b()
+{
+    x = 2017;
+
+}
+
+
+The application of rules 2 and 3 can introduce some insidious run-time bugs that are incomprehensible to the unwary programmer, especially if the duplicate symbol definitions have different types.
+
+Example : “x” is defined as an int in one module and a double in another.
+
+/*a.c*/
+#include <stdio.h>
+void b(void);
+
+int x = 2016;
+int y = 2017;
+int main()
+{
+    b();
+    printf("x = 0x%x y = 0x%x \n", x, y);
+    return 0;
+}
+/*b.c*/
+double x;
+
+void b()
+{
+    x = -0.0;
+}
+$ gcc a.c b.c -o geeksforgeeks
+$ ./geeksforgeeks
+x = 0x0 y = 0x80000000
+
+This is a subtle and nasty bug, especially because it occurs silently, with no warning from the compilation system, and because it typically manifests itself much later in the execution of the program, far away from where the error occurred. In a large system with hundreds of modules, a bug of this kind is extremely hard to fix, especially because many programmers are not aware of how linkers work. When in doubt, invoke the linker with a flag such as the gcc -fno-common flag, which triggers an error if it encounters multiple defined global symbols.
+
+
+These are two important header files used in C programming. While “<stdio.h>” is header file for Standard Input Output, “<stdlib.h>” is header file for Standard Library.
+
+It should be noted that a header file can contain not only function declaration but definition of constants and variables as well. Even macros and definition of new data types can also be added in a header file.
+
+math.h header file must be linked with -lm option.
+
+There are many different ways to make the variable as constant
+The const keyword specifies that a variable or object value is constant and can’t be modified at the compilation time.
+    const int num = 1;
+    num = 5; //ERROR:assignment of readonly variable 
+
+Enumeration :used to assign names to integral constants, that make a program easy to read and maintain . int, char, long etc. but it can't be float, double or user defined data type.
+
+Using Macros: We can also use Macros to define constant, but there is a catch,
+#define var 5
+Since Macros are handled by the pre-processor(the pre-processor does text replacement in our source file, replacing all occurrences of ‘var’ with the literal 5) not by the compiler.
+Hence it wouldn’t be recommended because Macros doesn’t carry type checking information and also prone to error. In fact not quite constant as ‘var’ can be redefined like this,
+#define var 5
+#ifdef var
+	#undef var
+	#define var 10
+#endif
+
+preprocessor work as literal constant, enum work as integer constant. they basically define symbolic name of the constant.
+
+therefore , use 'const' keyword in C.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Why variable name does not start with numbers in C ?
+In C, apart from keywords everything in the C program is treated as Identifier. Identifier can be the names given to variables, constants, functions and user-defined data. A variable name can consist of alphabets (upper case, lower case), numbers (0-9) and _ (underscore) character. But the name of any variable must not start with a number. Now we must have the answer that why can’t we name a variable starting with number. Following might be the reason for it. The compiler has 7 phase as fellows:
+    Lexical Analysis
+    Syntax Analysis
+    Semantic Analysis
+    Intermediate Code Generation
+    Code Optimization
+    Code Generation
+    Symbol Table
+
+Backtracking is avoided in lexical analysis phase while compiling the piece of code. The variable like Apple; , the compiler will know its a identifier right away when it meets letter ‘A’ character in the lexical Analysis phase. However, a variable like 123apple; , compiler won’t be able to decide if its a number or identifier until it hits ‘a’ and it needs backtracking to go in the lexical analysis phase to identify that it is a variable. But it is not supported in compiler.
+When you’re parsing the token you only have to look at the first character to determine if it’s an identifier or literal and then send it to the correct function for processing. So that’s a performance optimization.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++  AYUSH +++++++++++++++++++++++++++++++
+
+/*
+        gcc a.c f.c
+        gcc a.c f.c -Wall -Wextra
+        gcc a.c f.c -fno-common
+*/
+//a.c
+#include<stdio.h>
+int x;
+void f();
+int y=100;
+int main()
+{
+        printf("before x=%d, y=%d\n",x,y);
+        f();
+        printf("after x=%d, y=%d\n",x,y);
+return 0;
+}
+
+//f.c
+#include<stdio.h>
+int y;
+int x;
+void f()
+{
+        printf("f():before x=%d, y=%d\n",x,y);
+        x=10;
+        y=1000;
+}
+yes the rules mentioned above for weak and strong symbols works.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+shared libraries (called as Dynamic Linked Libraries or DLL in short)
+
+ The tool-set that is used to create these libraries need to understand the binary format. 
+Linux variants follow a format called Executable and Linkable Format (ELF). 
+
+The ELF files are position independent (PIC) format.
+ Shared libraries in Linux are referred as shared objects (generally with extension *.so). 
+These are similar to DLLs in Windows platform. Even shared object files follow the ELF binary format.
+
+When you link your application against static library, the code is part of your application. There is no dependency. Even though it causes the application size to increase, it has its own advantages.The primary one is speed as there will be no symbol (a program entity) resolution at runtime. Since every piece of code part of the binary image, such applications are independent of version mismatch issues. However, the cost is on fixing an issue in library code. If there is any bug in library code, entire application need to be recompiled and shipped to the client. In case of dynamic libraries, fixing or upgrading the libraries is easy. You just need to ship the updated shared libraries. The application need not to recompile, it only need to re-run. You can design a mechanism where we don’t need to restart the application.
+
+When we link an application against a shared library, the linker leaves some stubs (unresolved symbols) to be filled at application loading time. These stubs need to be filled by a tool called, dynamic linker at run time or at application loading time. Again loading of a library is of two types, static loading and dynamic loading. Don’t confuse between static loading vs static linking and dynamic loading vs dynamic linking.
+
+In static loading, all of those dependent shared libraries are loaded into memory even before the application starts execution. If loading of any shared library fails, the application won’t run.
+
+A dynamic loader examines application’s dependency on shared libraries. If these libraries are already loaded into the memory, the library address space is mapped to application virtual address space (VAS) and the dynamic linker does relocation of unresolved symbols.
+
+If these libraries are not loaded into memory (perhaps your application might be first to invoke the shared library), the loader searches in standard library paths and loads them into memory, then maps and resolves symbols. Again loading is big process, if you are interested write your own loader :).
+
+While resolving the symbols, if the dynamic linker not able to find any symbol (may be due to older version of shared library), the application can’t be started.
+
+Dynamic Loading:
+As the name indicates, dynamic loading is about loading of library on demand.
+For example, if you want a small functionality from a shared library. Why should it be loaded at the application load time and sit in the memory? You can invoke loading of these shared libraries dynamically when you need their functionality. This is called dynamic loading. In this case, the programmer aware of situation ‘when should the library be loaded’. The tool-set and relevant kernel provides API to support dynamic loading, and querying of symbols in the shared library.
+
+One of the main tasks for linker is to make code of library functions (eg printf(), scanf(), sqrt(), ..etc) available to your program. A linker can accomplish this task in two ways, by copying the code of library function to your object code, or by making some arrangements so that the complete code of library functions is not copied, but made available at run-time.
+
+Following are some important points about static libraries.
+1. For a static library, the actual code is extracted from the library by the linker and used to build the final executable at the point you compile/build your application.
+2. Each process gets its own copy of the code and data. Where as in case of dynamic libraries it is only code shared, data is specific to each process. For static libraries memory footprints are larger. For example, if all the window system tools were statically linked, several tens of megabytes of RAM would be wasted for a typical user, and the user would be slowed down by a lot of paging.
+
+3. Since library code is connected at compile time, the final executable has no dependencies on the library at run time i.e. no additional run-time loading costs, it means that you don’t need to carry along a copy of the library that is being used and you have everything under your control and there is no dependency.
+
+4. In static libraries, once everything is bundled into your application, you don’t have to worry that the client will have the right library (and version) available on their system.
+
+5. One drawback of static libraries is, for any change(up-gradation) in the static libraries, you have to recompile the main program every time.
+6. One major advantage of static libraries being preferred even now “is speed”. There will be no dynamic querying of symbols in static libraries. Many production line software use static libraries even today.
+
+Dynamic linking and Dynamic Libraries :
+Dynamic Linking doesn’t require the code to be copied, it is done by just placing name of the library in the binary file. The actual linking happens when the program is run, when both the binary file and the library are in memory. Examples of Dynamic libraries (libraries which are linked at run-time) are, .so in Linux 
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+1) Pointer to variable.
+int *ptr;
+
+2) Pointer to constant:
+const int *ptr;
+or
+int const *ptr;
+
+3) Constant pointer to variable.
+int *const ptr;
+
+4) constant pointer to constant
+const int *const ptr;
+
+There can be any types of constants like integer, float, octal, hexadecimal, character constants etc. Every constant has some range.
+
+Const Qualifier in C
+The qualifier const can be applied to the declaration of any variable to specify that its value will not be changed ( Which depends upon where const variables are stored, we may change the value of const variable by using pointer ). The result is implementation-defined if an attempt is made to change a const.
+
+1) Pointer to variable.
+int *ptr;
+We can change the value of ptr and we can also change the value of object ptr pointing to. Pointer and value pointed by pointer both are stored in the read-write area.
+
+2) Pointer to constant:
+We can change the pointer to point to any other integer variable, but cannot change the value of the object (entity) pointed using pointer ptr. The pointer is stored in the read-write area (stack in the present case). The object pointed may be in the read-only or read-write area.
+
+3) Constant pointer to variable.
+Above declaration is a constant pointer to an integer variable, means we can change the value of object pointed by pointer, but cannot change the pointer to point another variable.
+
+4) constant pointer to constant
+we cannot change value pointed by the pointer as well as we cannot point the pointer to other variables.
+
+Changing Value of a const variable through pointer
+
+The variables declared using const keyword, get stored in .rodata segment, but we can still access the variable through the pointer and change the value of that variable. By assigning the address of the variable to a non-constant pointer, We are casting a constant variable to a non-constant pointer. The compiler will give warning while typecasting and will discard the const qualifier. Compiler optimization is different for variables and pointers. That is why we are able to change the value of a constant variable through a non-constant pointer.
+
+
+volatile:
+The system always reads the current value of a volatile object from the memory location rather than keeping its value in temporary register at the point it is requested, even if a previous instruction asked for a value from the same object.
+
+++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++
+
+low level programming, we mean a piece of C code which is dealing with peripheral devices, IO ports (mainly memory mapped IO ports), Interrupt Service Routines (ISRs) which interact with Hardware.
+While translating Source code to Machine code, compilers typically try to optimize the output so that lesser Machine code needs to be executed finally.
+
+
+One such optimization is removing unnecessary Machine code for accessing variable which is not changing from Compiler’s perspective. Suppose we have the following code:
+
+while (status == 0)
+{
+  /*Let us assume that status isn't being changed
+  in this while loop or may be in our whole program*/
+
+  /*So long as status (which could be reflecting
+  status of some IO port) is ZERO, do something*/
+}
+An optimizing Compiler would see that status isn’t being changed by while loop. So there’s no need to access status variable again and again after each iteration of loop. So the Compiler would convert this loop to a infinite loop i.e. while (1) so that the Machine code to read status isn’t needed. Please note that compiler isn’t aware of that status is a special variable which can be changed from outside the current program at any point of time e.g. some IO operation happened on a peripheral device for which device IO port was memory mapped to this variable.
+
+So in reality, we want complier to access status variable after every loop iteration even though it isn’t modified by our program which is being compiled by Compiler.
+
+One can argue that we can turn-off all the compiler optimizations for such programs so that we don’t run into this situation. This is not an option due to multiple reasons such as
+A) Each compiler implementation is different so it’s not a portable solution
+B) Just because of one variable, we don’t want to turn of all the other optimizations which compiler does at other portions of our program.
+C) By turning off all the optimizations, our low level program couldn’t work as expected e.g. too much increase in size or delayed execution.
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+C doesn’t allow multiple storage class specifiers for a variable
+
+To restrict access to the current file only, global variables can be marked as static.
+
+register keyword can be used with pointer variables. Obviously, a register can have address of a memory location.
+
+Static variables should not be declared inside structure. The reason is C compiler requires the entire structure elements to be placed together (i.e.) memory allocation for structure members should be contiguous. It is possible to declare structure inside the function (stack segment) or allocate memory dynamically(heap segment) or it can be even global (BSS or data segment). Whatever might be the case, all structure members should reside in the same memory segment because the value for the structure element is fetched by counting the offset of the element from the beginning address of the structure. Separating out one member alone to data segment defeats the purpose of static variable and it is possible to have an entire structure as static.
+
+static variables can only be initialized using constant literals. 
+
+
+extern int var = 0;//warning: ‘var’ initialized and declared ‘extern’
+int main(void)
+{
+ var = 10;
+ return 0;
+}
+Do you think this program will work? Well, here comes another surprise from C standards. They say that..if a variable is only declared and an initializer is also provided with that declaration, then the memory for that variable will be allocated–in other words, that variable will be considered as defined. Therefore, as per the C standard, this program will compile successfully and work.
+
+
+static variables preserve their previous value in their previous scope and are not initialized again in the new scope
+
+the local variable name is deallocated the memory adderess,but not the value at the memeory address if we try to print the value at that memeory.we will get the value . that is stack frame range for a function is deallocated if the same function is called again ...and by chance same stck frame range is provided so we will find the previous value at that memory which will be garbage for us.
+
+Static variables (like global variables) are initialized as 0 if not initialized explicitly. Static global variables and functions are also possible in C. The purpose of these is to limit scope of a variable or function to a file.
+
+Another reason for making functions static can be reuse of the same function name in other files
+
+Basically, the extern keyword extends the visibility of the C variables and C functions. That’s probably the reason why it was named extern.
+
+Declaration of a variable or function simply declares that the variable or function exists somewhere in the program, but the memory is not allocated for them. The declaration of a variable or function serves an important role–it tells the program what its type is going to be. In case of function declarations, it also tells the program the arguments, their data types, the order of those arguments, and the return type of the function. So that’s all about the declaration.
+
+Coming to the definition, when we define a variable or function, in addition to everything that a declaration does, it also allocates memory for that variable or function.
+
+It turns out that when a function is declared or defined, the extern keyword is implicitly assumed.
+
+Since the extern keyword extends the the function’s visibility to the whole program, the function can be used (called) anywhere in any of the files of the whole program, provided those files contain a declaration of the function. 
+(With the declaration of the function in place, the compiler knows the definition of the function exists somewhere else and it goes ahead and compiles the file). So that’s all about extern and functions.
+
+
+extern int var;
+Here, an integer type variable called var has been declared (it hasn’t been defined yet, so no memory allocation for var so far)
+int var;
+In this line, an integer type variable called var has been both declared and defined (remember that definition is the superset of declaration). Since this is a definition, the memory for var is also allocated. Now here comes the surprise. When we declared/defined a function, we saw that the extern keyword was present implicitly. But this isn’t the case with variables. If it were, memory would never be allocated for them. Therefore, we need to include the extern keyword explicitly when we want to declare variables without defining them. Also, as the extern keyword extends the visibility to the whole program, by using the extern keyword with a variable, we can use the variable anywhere in the program provided we include its declaration the variable is defined somewhere.
+
+
+int var;
+int main(void)
+{
+   var = 10;
+   return 0;
+}
+This program compiles successfully. var is defined (and declared implicitly) globally.
+
+extern int var;
+int main(void)
+{
+  var = 10;
+  return 0;
+}
+This program throws an error in compilation because var is declared but not defined anywhere. Essentially, the var isn’t allocated any memory. And the program is trying to change the value to 10 of a variable that doesn’t exist at all.
+
+A declaration can be done any number of times of extern variable  but definition only once.
+
+As an exception, when an extern variable is declared with initialization, it is taken as the definition of the variable as well.
+
+Registers are faster than memory to access, so the variables which are most frequently used in a C program can be put in registers using register keyword. The keyword register hints to compiler that a given variable can be put in a register. It’s compiler’s choice to put it in a register or not
+
+
+#include <stdio.h>
+#include <stdlib.h>
+int main(void)
+{
+   static int *p = (int*)malloc(sizeof(p));
+   *p = 10;
+   printf("%d", *p);
+}
+main.c: In function ‘main’:
+main.c:7:17: error: initializer element is not constant
+ static int *p = (int*)malloc(sizeof(p));
+
+
+#include <stdio.h>
+#include <stdlib.h>
+int *p = (int*)malloc(sizeof(p));
+int main(void)
+{
+    *p = 10;
+    printf("%d", *p);
+}
+main.c:4:10: error: initializer element is not constant
+ int *p = (int*)malloc(sizeof(p));
+
+In C, static and global variables are initialized by the compiler itself. Therefore, they must be initialized with a constant value.
+
+A static variable needs to be initialized with constant value. But here the static variable is a pointer type and to initialize it dynamic memory allocation is attempted, which will give an address from heap segment.
+According to process memory layout, the static variable has to be stored in Data segment and in above code the law is getting violated by assigning address to static variable from heap segment. Hence it will give error.
+
+#include<stdio.h>
+#include<stdlib.h>
+int main()
+{
+static int *ptr = 0 ;
+ptr = (int*)malloc(4);
+*ptr = 10;
+printf("%d\n",*ptr);
+}
+output:10
+
+
+#include <stdio.h>
+int fun(int x)
+{
+    return (x+5);
+}
+int y = fun(20);
+int main()
+{
+    printf("%d ", y);
+}
+C++ : output: 25
+C:error
+main.c:7:9: error: initializer element is not constant
+ int y = fun(20);
+
+
+What if the inner block itself has one variable with the same name?
+If an inner block declares a variable with the same name as the variable declared by the outer block, then the visibility of the outer block variable ends at the pint of the declaration by inner block.
+
+Can variables of the block be accessed in another subsequent block?
+No, a variable declared in a block can only be accessed inside the block and all inner blocks of this block.
+
+Register variables are active only within the function. Register variables are alive until the end of a function.
+
+Redeclaration of global variable in C: C allows a global variable to be declared again when first declaration doesn’t initialize the variable.
+
+// Program 1
+int main()
+{
+   int x;
+   int x = 5;
+   printf("%d", x);
+   return 0;
+}
+Output in C:
+redeclaration of ‘x’ with no linkage
+
+// Program 2
+int x;
+int x = 5;
+int main()
+{
+   printf("%d", x);
+   return 0;
+}
+Output in C:
+5
+
+The below program fails in both C also as the global variable is initialized in first declaration itself.
+
+int x = 5;
+int x = 10;
+
+int main()
+{
+   printf("%d", x);
+   return 0;
+}
+Output:
+ error: redefinition of ‘x’
+
+
+
+int main()
+{
+int i, j, *p;
+i = 25;
+j = 100;
+int *p = &i;
+
+}
+xyz.c: In function ‘main’:
+xyz.c:16:6: error: redeclaration of ‘p’ with no linkage
+ int *p = &i;
+      ^
+Both declarations don't specify the linkage - that is, they don't say that the object is extern (external linkage) or static (internal linkage) .Such objects have 'no linkage' and you can't have two of them in the same scope. 
+
+
+#include<stdio.h>
+int y;
+int y = 5;
+
+int z = 5;
+int z = 10;
+
+int main()
+{
+   int x;
+   int x = 5;
+   printf("%d", x);
+   return 0;
+}
+
+redeclaringGlobalVariable.c:6:5: error: redefinition of ‘z’
+ int z = 10;
+     ^
+redeclaringGlobalVariable.c:5:5: note: previous definition of ‘z’ was here
+ int z = 5;
+     ^
+redeclaringGlobalVariable.c: In function ‘main’:
+redeclaringGlobalVariable.c:11:8: error: redeclaration of ‘x’ with no linkage
+    int x = 5;
+        ^
+redeclaringGlobalVariable.c:10:8: note: previous declaration of ‘x’ was here
+    int x;
+        ^
+
+#include<stdio.h>
+register int x;
+int x=90;
+register int z=10;
+int main()
+{
+        register int y;
+        return 0;
+}
+
+registerInLocalSpaceOnly.c: At top level:
+registerInLocalSpaceOnly.c:5:14: error: register name not specified for ‘z’
+ register int z=10;
+              ^
+[root@localhost storageClasses]# 
+
+
+#include<stdio.h>
+register int x;
+int main()
+{
+        register int y;
+        int x=90;
+        register int z=10;
+        return 0;
+}
+registerInLocalSpaceOnly.c: At top level:
+registerInLocalSpaceOnly.c:3:14: error: register name not specified for ‘x’
+ register int x;
+              ^
+
+
+#include<stdio.h>
+char c;
+register char *cp;
+int i;
+register int *ip;
+extern int var=10;
+extern int var2;
+int main()
+{
+        var=100;
+        var2=100;
+return 0;
+}
+
+registerPointer.c:13:12: warning: ‘var’ initialized and declared ‘extern’
+ extern int var=10;
+            ^~~
+registerPointer.c:6:16: error: register name not specified for ‘cp’
+ register char *cp;
+                ^~
+registerPointer.c:9:15: error: register name not specified for ‘ip’
+ register int *ip;
+               ^~
+
+
+
+#include<stdio.h>
+char c;
+register char *cp;
+
+int i;
+register int *ip;
+int *ip=&i;
+
+
+extern int var=10;
+extern int var2;
+int main()
+{
+cp=&c;
+        var=100;
+        var2=100;
+return 0;
+}
+
+registerPointer.c:13:12: warning: ‘var’ initialized and declared ‘extern’
+ extern int var=10;
+            ^~~
+registerPointer.c:6:16: error: register name not specified for ‘cp’
+ register char *cp;
+                ^~
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+signals are generated by the kernel and handled by the process.
+
+Segmentation Fault (also known as SIGSEGV and is usually signal 11) occur when the program tries to write/read outside the memory allocated for it or when writing memory which can only be read.In other words when the program tries to access the memory to which it doesn’t have access to. SIGSEGV is abbreviation for “Segmentation Violation”.
+
+Few cases where SIGSEGV signal generated are as follows,
+-> Using uninitialized pointer
+-> De-referencing a NULL pointer
+-> Trying to access memory that the program doesn’t own (eg. trying to access an array element
+out of array bounds).
+-> Trying to access memory which is already de-allocated (trying to use dangling pointers).
+
+
+Core Dump Reasons:
+-Dereferencing uninitialized pointer.A pointer must point to valid memory before accessing it. SIGSEGV
+-Stack Overflow. SIGSEGV
+-Improper use of scanf(). SIGSEGV
+-Accessing out of array index bounds. SIGSEGV
+-Accessing an address that is freed. SIGSEGV
+-Modifying a string literal. SIGSEGV
+char *str;
+str = "GfG";    /* Stored in read only part of data segment */
+*(str+1) = 'n'; /* Problem:  trying to modify read only memory */
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+\'
+\"
+\?
+\OOO: here each O is an octal value from digit 0-7. 
+	printf("z\072100"); == z:100...so \072 is treated as octal
+
+\xhh: here hh is hexaecimal. "B\x4a" ==  BJ.
+\a: alarm bell
+\b: backspace. one character back with or without deleting on different compilers.
+\n
+\t
+\v
+\\
+\r: carriage return charcter.
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+A token is the smallest element of a program that is meaningful to the compiler. Tokens can be classified as follows:
+
+:Keywords:Identifiers:Constants:Strings:Special Symbols:Operators
+
+Identifiers are used as the general terminology for naming of variables, functions and arrays.
+
+Integer constants – Example: 0, 1, 1218, 12482
+Real or Floating point constants – Example: 0.0, 1203.03, 30486.184
+Octal & Hexadecimal constants – Example: octal: (013 )8 = (11)10, Hexadecimal: (013)16 = (19)10
+Character constants -Example: ‘a’, ‘A’, ‘z’
+String constants -Example: “GeeksforGeeks”
+
+Strings are nothing but an array of characters ended with a null character (‘\0’).This null character indicates the end of the string. Strings are always enclosed in double quotes.
+
+Special Symbols: The following special symbols are used in C having some special meaning and thus, cannot be used for some other purpose.[] () {}, ; * = #
+
+Arithmetic operators
+Relational Operators
+Logical Operators
+Assignment Operators
+Conditional Operators
+Bitwise Operators
+Ternary Operators
+
+
+Compound literal (an array is created without any name and address of first element is assigned to p.  This is equivalent to:
+   // int arr[] = {2, 4, 6};
+   // int *p = arr;
+   int *p = (int []){2, 4, 6};
+
+Compound literals feature allows us to create unnamed objects with given list of initialized values.
+
+
+What is the use of it?
+Compound literals are mainly used with structures and are particularly useful when passing structures variables to functions. We can pass a structure object without defining it
+
+void printPoint(struct Point p)//defination
+{
+   printf("%d, %d", p.x, p.y);
+}
+printPoint((struct Point){2, 3});//calling
+
+
+Difference b/w variable declaration and definition
+Variable declaration refers to the part where a variable is first declared or introduced before its first use. Variable definition is the part where the variable is assigned a memory location and a value. Most of the times, variable declaration and definition are done together.
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+2) int (*daytab)[13]
+Postfix : daytab * [13] int
+Meaning : daytab is pointer to array of 13 integers.
+
+3) void (*f[10]) (int, int)
+Postfix : f[10] * (int, int) void
+Meaning : f is an array of 10 pointer to function(which takes 2 arguments of type int) returning void
+
+
+4) char (*(*x())[]) ()
+Postfix : x () * [] * () char
+Meaning : x is a function returning pointer to array of pointers to function returnging char
+
+
+5) char (*(*x[3])())[5]
+Postfix : x[3] * () * [5] char
+Meaning : x is an array of 3 pointers to function returning pointer to array of 5 char’s
+
+6) int *(*(*arr[5])()) ()
+Postfix : arr[5] * () * () * int
+Meaning : arr is an array of 5 pointers to functions returning pointer to function returning pointer to integer
+
+7) void (*bsd_signal(int sig, void (*func)(int)))(int);
+Postfix : bsd_signal(int sig, void(*func)(int)) * (int) void
+Meaning : bsd_signal is a function that takes integer & a pointer to a function(that takes integer as argument and returns void) and returns pointer to a function(that take integer as argument and returns void)
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+float: It is used to store decimal numbers (numbers with floating point value) with single precision.
+
+double: It is used to store decimal numbers (numbers with floating point value) with double precision.
+
+
+As already known character known character range is between -128 to 127 or 0 to 255.
+
+
+So %d specifier causes an integer value to be printed and %c specifier causes a character value to printed. But care has to taken that while using %c specifier the integer value should not exceed 127.
+
+float is a 32 bit IEEE 754 single precision Floating Point Number1 bit for the sign, (8 bits for the exponent, and 23* for the value), i.e. float has 7 decimal digits of precision.
+
+double is a 64 bit IEEE 754 double precision Floating Point Number (1 bit for the sign, 11 bits for the exponent, and 52* bits for the value), i.e. double has 15 decimal digits of precision.
+
+In C language, we have three floating data types i.e. float, double and long double. And the exact size of each of these 3 types depends on the C compiler implementation/platform.
+printf("%d %d %d",sizeof(float), sizeof(double), sizeof(long double));
+
+But what about the size of a floating point constant (e.g. 31.4 or 2.718)? For example if we have PI macro defined as follows, what would be the sizeof(3.14).
+
+#define PI 3.14
+Now if we do sizeof(PI), what will be its size? Is is equal to sizeof(float) ? Or is it also compiler implementation dependent.
+
+
+Well, for floating constants, C standard (C11 i.e. ISO/IEC 9899:2011) has given guideline. As per C11 clause 6.4.4.2, 
+“An unsuffixed floating constant has type double."
+"If suffixed by the letter f or F, it has type float."
+"If suffixed by the letter l or L, it has type long double.“
+
+It means the type of a floating constant is same as that of double data type. 
+
+size_t is an unsigned integral data type.
+It’s a type which is used to represent the size of objects in bytes and is therefore used as the return type by the sizeof operator. 
+It is guaranteed to be big enough to contain the size of the biggest object the host system can handle. Basically the maximum permissible size is dependent on the compiler; 
+if the compiler is 32 bit then it is simply a typedef(i.e., alias) for unsigned int but 
+if the compiler is 64 bit then it would be a typedef for unsigned long long. The size_t data type is never negative.
+
+void *malloc(size_t n);
+// While copying 'n' bytes from 's2' to 's1', n must be non-negative integer.
+void *memcpy(void *s1, void const *s2, size_t n);
+// strlen() uses size_t because the length of any string will always be at least 0.
+size_t strlen(char const *s);
+size_t or any unsigned type might be seen used as loop variable as loop variables are typically greater than or equal to 0.
+
+
+1. If no data type is given to a variable, the compiler automatically converts it to int data type.
+signed a;
+signed b;
+
+// size of a and b is equal to the size of int
+printf("The size of a is %d\n", sizeof(a));
+printf("The size of b is %d", sizeof(b));
+
+2. Signed is the default modifier for char and int data types.
+
+3. We can’t use any modifiers in float data type. If programmer tries to use it ,the compiler automatically gives compile time error
+    signed float a;
+    short float b;
+Output:
+[Error] both 'signed' and 'float' in declaration specifiers
+[Error] both 'short' and 'float' in declaration specifiers
+
+4. Only long modifier is allowed in double data types. We cant use any other specifier with double data type. If we try any other specifier, compiler will give compile time error.
+
+
+Integer Promotions in C
+Some data types like char , short int take less number of bytes than int, these data types are automatically promoted to int or unsigned int when an operation is performed on them. This is called integer promotion.
+For example no arithmetic calculation happens on smaller types like char, short and enum. They are first converted to int or unsigned int, and then arithmetic is done on them. If an int can represent all values of the original type, the value is converted to an int . Otherwise, it is converted to an unsigned int.
+
+
+For example see the following program.
+#include <stdio.h>
+int main()
+{
+    char a = 30, b = 40, c = 10;
+    char d = (a * b) / c;
+    printf ("%d ", d);
+    return 0;
+}
+Output:
+120
+
+At first look, the expression (a*b)/c seems to cause arithmetic overflow because signed characters can have values only from -128 to 127 (in most of the C compilers), and the value of subexpression ‘(a*b)’ is 1200 which is greater than 128. But integer promotion happens here in arithmetic done on char types and we get the appropriate result without any overflow.
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Now in order to compile with 32-bit gcc, just add a flag -m32 in the command line of compling the ‘C’ language program.
+
+and similalry -m64
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+All the data types of the variables are upgraded to the data type of the variable with largest data type.
+
+       bool -> char -> short int -> int ->
+       unsigned int -> long -> unsigned ->
+       long long -> float -> double -> long double
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+What is return type of getchar(), fgetc() and getc() ?
+In C, return type of getchar(), fgetc() and getc() is int (not char).
+
+fgets() and gets() in C language
+For reading a string value with spaces, we can use either gets() or fgets() in C programming 
+
+fgets()
+It reads a line from the specified stream and stores it into the string pointed to by str. It stops when either (n-1) characters are read, the newline character is read, or the end-of-file is reached, whichever comes first.
+
+char *fgets(char *str, int n, FILE *stream)
+
+str : Pointer to an array of chars where the string read is copied.
+n : Maximum number of characters to be copied into str(including the terminating null-character).
+*stream : Pointer to a FILE object that identifies an input stream. stdin can be used as argument to read from the standard input.
+returns : the function returns str
+
+it follow some parameter such as Maximum length, buffer, input device reference.
+It is safe to use because it checks the array bound.
+It keep on reading until new line character encountered or maximum limit of character array.
+
+
+gets()
+Reads characters from the standard input (stdin) and stores them as a C string into str until a newline character or the end-of-file is reached.
+char * gets ( char * str );
+str :Pointer to a block of memory (array of char)
+where the string read is copied as a C string.
+returns : the function returns str
+
+It is not safe to use because it does not check the array bound.
+It is used to read string from user until newline character not encountered.
+
+Difference between getc(), getchar(), getch() and getche()
+All of these functions read a character from input and return an integer value. The integer is returned to accommodate a special value used to indicate failure. The value EOF is generally used for this purpose.
+
+
+getc():
+It reads a single character from a given input stream and returns the corresponding integer value (typically ASCII value of read character) on success. It returns EOF on failure.
+
+Syntax:
+int getc(FILE *stream);
+
+printf("%c", getc(stdin));
+
+
+getchar():
+The difference between getc() and getchar() is getc() can read from any input stream, but getchar() reads from standard input. So getchar() is equivalent to getc(stdin).
+int getchar(void);
+printf("%c", getchar());
+
+---------
+getch():
+int getch();
+a nonstandard function and is present in conio.h header file which is mostly used by MS-DOS compilers like Turbo C.It is not part of the C standard library or ISO C, nor is it defined by POSIX .
+Like above functions, it reads also a single character from keyboard. But it does not use any buffer, so the entered character is immediately returned without waiting for the enter key.
+
+getche()
+Like getch(), this is also a non-standard function present in conio.h. It reads a single character from the keyboard and displays immediately on output screen without waiting for enter key.
+Syntax:
+int getche(void);
+----------
+
+One more difference with getchar() is, it is not a C standard library function, but a POSIX function.
+
+It is a known fact than scanf() is faster than cin and getchar() is faster than scanf() in general. getchar_unlocked() is faster than getchar(), hence fastest of all.
+
+Similarly, there are getc_unlocked() putc_unlocked(), and putchar_unlocked() which are non-thread-safe versions of getc(), putc() and putchar() respectively.
+
+
+While taking an input string with spaces, the buffer does not get cleared for the next input and considers the previous input for the same. 
+A temporary storage area is called buffer. All standard input and output devices contain an input and output buffer.
+
+in case of C after encountering “scanf()” , if we need to input a character array or character  we require to clear the input buffer or else the desired input is occupied by buffer of previous variable, not by the desired container.
+On pressing “Enter” (carriage return) on output screen after the first input , , as the buffer of previous variable was the space for new container(as we did’nt clear it) , the program skips the following input of container.
+
+#include<stdio.h>
+int main()
+{
+    char str[80], ch;
+    // Scan input from user - "GeeksforGeeks" for example
+    scanf("%s", str);
+
+    // Scan character from user - 'a' for example
+    ch = getchar();
+
+    // Printing character array, prints “GeeksforGeeks”)
+    printf("%s\n", str);
+
+    printf("%c", ch);   // This does not print character 'a'
+
+    return 0;
+}
+Input:
+GeeksforGeeks
+a
+
+Output:
+GeeksforGeeks
+
+
+
+the output is not printed as desired. Reason to this is an occupied Buffer. The “\n” character goes remains there in buffer and read as next input.
+
+How can it be resolved?
+In case of C : Using “ while ((getchar()) != ‘\n’); ”  
+Typing “while ((getchar()) != ‘\n’);” reads the buffer characters till the end and discards them(including newline) 
+and using it after the “scanf()” statement clears the input buffer and allows the input in the desired container.
+
+// C Code to explain why adding "while ( (getchar()) != '\n');" . after "scanf()" statement flushes the input buffer
+#include<stdio.h>
+int main()
+{
+    char str[80], ch;
+    // scan input from user - GeeksforGeeks for example
+    scanf("%s", str);
+
+    // flushes the standard input (clears the input buffer)
+    while ((getchar()) != '\n');
+
+    // scan character from user - 'a' for example
+    ch = getchar();
+
+    // Printing character array, prints “GeeksforGeeks”)
+    printf("%s\n", str);
+
+    // Printing character a: It will print 'a' this time
+    printf("%c", ch);
+
+    return 0;
+}
+Input:
+GeeksforGeeks
+a
+
+Output:
+GeeksforGeeks
+a
+
+
+fun_with_printf
+The character % is followed by one of the following characters.
+:The flag character : The field width : The precision : The length modifier : The conversion specifier:
+
+
+
+What is use of %n in printf() ?
+
+  int c;
+  printf("geeks for %ngeeks ", &c);
+  printf("%d", c);
+
+The above program prints “geeks for geeks 10”. The first printf() prints “geeks for geeks”. The second printf() prints 10 as there are 10 characters printed (the 10 characters are “geeks for “) before %n in first printf() and c is set to 10 by first printf().
+
+In C printf(), %n is a special format specifier which instead of printing something causes printf() to load the variable pointed by the corresponding argument with a value equal to the number of characters that have been printed by printf() before the occurrence of %n.
+
+
+printf:
+printf function is used to print character stream of data on stdout console.
+
+
+sprintf:
+Syntax: int sprintf(char *str, const char *string,...);
+String print function instead of printing on console store it on char buffer which are specified in sprintf
+
+    char buffer[50];
+    int a = 10, b = 20, c;
+    c = a + b;
+    sprintf(buffer, "Sum of %d and %d is %d", a, b, c);
+
+    // The string "sum of 10 and 20 is 30" is stored into buffer instead of printing on stdout
+    printf("%s", buffer);
+
+
+fprintf:
+fprintf is used to print the string content in file but not on stdout console.
+int fprintf(FILE *fptr, const char *str, ...);
+
+#include<stdio.h>
+int main()
+{
+    int i, n=2;
+    char str[50];
+
+    //open file sample.txt in write mode
+    FILE *fptr = fopen("sample.txt", "w");
+    if (fptr == NULL)
+    {
+        printf("Could not open file");
+        return 0;
+    }
+
+    for (i=0; i<n; i++)
+    {
+        puts("Enter a name");
+        gets(str);
+        fprintf(fptr,"%d.%s\n", i, str);
+    }
+    fclose(fptr);
+
+    return 0;
+}
+Input: GeeksforGeeks
+       GeeksQuiz
+Output :  sample.txt file now having output as
+0. GeeksforGeeks
+1. GeeksQuiz
+
+
+getch() method pauses the Output Console untill a key is pressed.
+It does not use any buffer to store the input character.
+The entered character is immediately returned without waiting for the enter key.
+The entered character does not show up on the console.
+The getch() method can be used to accept hidden inputs like password, ATM pin numbers, etc.
+
+
+scanf() and fscanf() in C
+How to read only a part of the input that we need? For example, consider some input stream that contains only characters followed by an integer or a float. And we need to scan only that integer or float.That is ,
+Input: “this is the value 100”,
+Output: value read is 100
+Input : “this is the value 21.2”,
+Output : value read is 21.2
+
+ assume we don’t know what the preceding characters are but we surely know that the last value is an integer. How can we scan the last value as an integer?
+Below solution works only if input string has no spaces.
+    int a;
+    scanf("%*s %d", &a);
+    printf("Input value read : a=%d",a);
+    return 0;
+Explanation: The %*s in scanf is used to ignore some input as required. In this case, it ignores the input until the next space or new line. Similarly if you write %*d it will ignore integers until the next space or new line.
+
+int fscanf(FILE *ptr, const char *format, ...)
+fscanf reads from a file pointed by the FILE pointer (ptr), instead of reading from the input stream.
+
+Consider the following text file abc.txt
+NAME    AGE   CITY
+abc     12    hyderbad
+bef     25    delhi
+cce     65    bangalore
+Now, we want to read only the city field of the above text file, ignoring all the other fields. A combination of fscanf and the trick mentioned above does this with ease
+
+/*c program demonstrating fscanf and its usage*/
+#include<stdio.h>
+int main()
+{
+    FILE* ptr = fopen("abc.txt","r");
+    if (ptr==NULL)
+    {
+        printf("no such file.");
+        return 0;
+    }
+    char* buf[100];
+    while (fscanf(ptr,"%*s %*s %s ",buf)==1)
+        printf("%s\n", buf);
+
+    return 0;
+}
+Output:
+CITY
+hyderbad
+delhi
+bangalore
+
+scanf(“%[^\n]s”, str) Vs gets(str) 
+gets is a more convenient method of reading a string of text containing whitespaces.
+Unlike scanf(), it does not skip whitespaces.
+It is used to read the input until it encounters newline.
+
+In general scanf() function with format specification like %s and specification with the field width in the form of %ws can read-only strings till non-whitespace part.
+It means they cannot be used for reading a text containing more than one word, especially with Whitespaces.
+
+The main difference between them is:
+scanf() reads input until it encounters whitespace, newline or End Of File(EOF) whereas gets() reads input until it encounters newline or End Of File(EOF), gets() does not stop reading input when it encounters whitespace instead it takes whitespace as a string.
+
+Problem with scanf() when there is fgets()/gets()/scanf() after it
+#include<stdio.h>
+int main()
+{
+   int x;
+   char str[100];
+   scanf("%d", &x);
+   fgets(str, 100, stdin);
+   printf("x = %d, str = %s", x, str);
+   return 0;
+}
+Input
+10
+test
+Output:
+x = 10, str =
+The problem with above code is scanf() reads an integer and leaves a newline character in buffer. So fgets() only reads newline and the string “test” is ignored by the program.
+
+The similar problem occurs when scanf() is used in a loop.
+This happens because every scanf() leaves a newline character in buffer that is read by next scanf.
+
+How to solve above problem?
+        1)We can make scanf() to read a new line by using an extra “\n”, i.e., scanf(“%d\n”, &x) .
+          In fact scanf(“%d “, &x       ) also works (Note extra space).
+        2)We can add a getchar() after scanf() to read an extra newline.
+
+
+although the fgets function does actually append a null to the end of the input string, provided there is enough room in the buffer.
+
+Usually, to clear the input buffer, one would just call fseek(stdin, 0, SEEK_END); but it doesn’t seem to work on every platform.
+
+
+In case of a string (character array), the variable itself points to the first element of the array in question. Thus, there is no need to use the ‘&’ operator to pass the address.
+
+char name[25];
+scanf("%s", name);
+
+‘&’ is used to get the address of the variable. C does not have a string type, String is just an array of characters and an array variable stores the address of the first index location.
+By default the variable itself points to the base address and therefore to access base address of string, there is no need of adding an extra ‘&’
+
+The iscntrl() function is used to checks whether a character is a control character or not. iscntrl() function also take a single argument and return an integer.
+
+
+How srand() and rand() are related to each other?
+
+srand() sets the seed which is used by rand to generate “random” numbers. If you don’t call srand before your first call to rand, it’s as if you had called srand(1) to set the seed to one.
+In short, srand() — Set Seed for rand() Function.
+
+
+scanf() : It returns total number of Inputs Scanned successfully, or EOF if input failure occurs before the first receiving argument was assigned.
+
+printf() : It returns total number of Characters Printed, Or negative value if an output error or an encoding error
+when multiple printf’s appear inside another printf, the inner printf prints its output and returns length of the string printed on the screen to the outer printf.
+
+Input:
+Hey!
+welcome to
+geeks for geeks
+
+Output:
+ First scanf() returns : 1
+ Second scanf() returns : 2
+ Third scanf() returns : 3
+
+
+    long int n = 123456789;
+    printf("While printing ");
+    printf(", the value returned by printf() is : %d", printf("%d", n));
+    return 0;
+
+Output: While printing 123456789, the value returned by printf() is : 9
+
+
+Inbuilt library functions for user Input | scanf, fscanf, sscanf, scanf_s, fscanf_s, sscanf_s
+
+sscanf(): sscanf() is used to read formatted input from the string.
+Syntax: int sscanf ( const char * s, const char * format, ...);
+Return type: Integer
+Parameters:
+s: string used to retrieve data
+format: string that contains the type specifier(s)
+… : arguments contains pointers to allocate storage with appropriate type.
+
+
+    char s [] = "3 red balls 2 blue balls";
+    char str [10],str2 [10];
+    int i;
+    // %*s is used to skip a word
+    sscanf (s,"%d %*s %*s %*s %s %s", &i, str, str2);
+    printf ("%d %s %s \n", i, str, str2);
+Output:
+3 blue balls
+
+
+fscanf(): fscanf() reads formatted data from file and stores it into variables.
+Syntax: int fscanf(FILE *stream, const char *format, ...)
+
+Parameters:
+Stream:  pointer to the File object that identifies the stream.
+format: is a string that contains the type specifier(s)
+On success, the function returns the number of variables filled. In the case of an input failure, before any data could be successfully read, EOF is returned.
+
+    // file pointer
+    FILE * fp;
+
+    // opening/creation of file
+    fp = fopen ("file.txt", "w+");
+
+    // storing string in the file
+    fputs("Hello World its 2017", fp);
+
+    // sets the file position to the beginning of the file
+    rewind(fp);
+
+    // taking input from file
+    fscanf(fp, "%s %s %s %d", s1, s2, s3, &year);
+
+    printf("String1 |%s|\n", s1 );
+    printf("String2 |%s|\n", s2 );
+    printf("String3 |%s|\n", s3 );
+    printf("Integer |%d|\n", year );
+
+    // close file pointer
+    fclose(fp);
+
+Output:
+String1 |Hello|
+String2 |World|
+String3 |its|
+Integer |2017|
+
+
+Scansets in C
+scanf family functions support scanset specifiers which are represented by %[]. Inside scanset, we can specify single character or range of characters. While processing scanset, scanf will process only those characters which are part of scanset. We can define scanset by putting characters inside squre brackets. Please note that the scansets are case-sensitive.
+
+
+Let us see with example. Below example will store only capital letters to character array ‘str’, any other character will not be stored inside character array.
+    scanf("%[A-Z]s", str);
+
+If first character of scanset is ‘^’, then the specifier will stop reading after first occurrence of that character. For example, given below scanset will read all characters but stops after first occurrence of ‘o’
+
+scanf("%[^o]s", str);
+  Enter a string: http://geeks for geeks
+  You entered: http://geeks f
+
+Never use gets(). Because it is impossible to tell without knowing the data in advance how many characters gets() will read, and because gets() will continue to store characters past the end of the buffer, it is extremely dangerous to use. It has been used to break computer security. Use fgets() instead.
+
+percentage sign (%) indicates a format specifier, which is used to specify the type and format of the data to be retrieved from the stream and stored into the locations pointed by the additional arguments.
+
+%d specifies signed decimal integer while %i specifies integer.
+
+%d and %i behave similar with printf
+There is no difference between the %i and %d format specifiers for printf.
+%d and %i behavior is different in scanf
+
+%d and %i behavior is different in scanf.
+%d assume base 10 while %i auto detects the base. Therefore, both specifiers behaves differently while they are used with an input specifier. So, 012 would be 10 with %i but 12 with %d.
+
+%d takes integer value as signed decimal integer i.e. it takes negative values along with positive values but values should be in decimal otherwise it will print garbage value. Consider a following example.
+%i takes integer value as integer value with decimal, hexadecimal or octal type.
+
+To enter a value in hexadecimal format – value should be provided by preceding “0x” and value in octal format – value should be provided by preceding “0”.
+
+    printf("Enter value of a in decimal format:");
+    scanf("%d", &a);
+
+    printf("Enter value of b in octal format: ");
+    scanf("%i", &b);
+
+    printf("Enter value of c in hexadecimal format: ");
+    scanf("%i", &c);
+
+    printf("a = %i, b = %i, c = %i", a, b, c);
+
+
+Output:
+Enter value of a in decimal format:12
+Enter value of b in octal format: 012
+Enter value of c in hexadecimal format: 0x12
+a = 12, b = 10, c = 18
+Explanation:
+The decimal value of a as 12 is 12
+The decimal value of b as 12(octal) is 10
+The decimal value of c as 12(hexadecimal) is 18
+
+remember scanf is a function().
+ scanf() needs to modify values of a and b and but they are local to scanf(). So in order to reflect changes in the variable a and b of the main function, we need to pass addresses of them. We cannot simply pass them by value.
+
+But in case of printf function as we are only going to print the values of the variables in output console, there are no changes going to be made in variable a and b’s values. So it is not required to send their addresses.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Arithmetic Operators (+, -, *, /, %, post-increment, pre-increment, post-decrement, pre-decrement)
+
+Relational Operators (==, !=, >, <, >= , <=)
+
+Logical Operators (&&, || and !)
+
+Bitwise Operators (&, |, ^, ~, >> and <<)
+
+Assignment Operators (=, +=, -=, *=, etc..(like : ^= ,&= ))
+
+Other Operators (conditional, comma, sizeof, address, redirecton)
+
+
+
+
+precedence of Postfix ++ (or Postfix –) is higher than both Prefix ++ and *. precedence of Prefix ++ (or Prefix –) has higher priority than dereference (*) operator 
+so, post, pre,*
+
+
+sizeof operator:
+It is a compile time unary operator which can be used to compute the size of its operand. The result of sizeof is of unsigned integral type which is usually denoted by size_t. Basically, sizeof operator is used to compute the size of the variable.
+
+Comma Operator:
+The comma operator (represented by the token ,) is a binary operator that evaluates its first operand and discards the result, it then evaluates the second operand and returns this value (and type). The comma operator has the lowest precedence of any C operator. Comma acts as both operator and separator.
+
+remembering following simple rules about postfix ++, prefix ++ and * (dereference) operators
+1) Precedence of prefix ++ and * is same. Associativity of both is right to left.
+2) Precedence of postfix ++ is higher than both * and prefix ++. Associativity of postfix ++ is left to right.
+
+The logical and operator ‘&&’ expects its operands to be boolean expressions (either 1 or 0) and returns a boolean value.
+The bitwise and operator ‘&’ works on Integral (short, int, unsigned, char, bool, unsigned char, long) values and return Integral value.
+
+
+b) If an integral value is used as an operand for ‘&&’ which is supposed to work on boolean values, following rule is used in C.
+…..A zero is considered as false and non-zero is considered as true.
+It is compiler error to use non-integral expression as operand for bitwise &.
+
+c) The ‘&&’ operator doesn’t evaluate second operand if first operand becomes false. Similarly ‘||’ doesn’t evaluate second operand when first operand becomes true. The bitwise ‘&’ and ‘|’ operators always evaluate their operands.
+
+results of both -1 << 1 and 1 << -1 is undefined. Also, if the number is shifted more than the size of integer, the behaviour is undefined. For example, 1 << 33 is undefined
+
+
+“Given a set of numbers where all elements occur even number of times except one number, find the odd occurring number” This problem can be efficiently solved by just doing XOR of all numbers.
+
+// Function to return the only odd
+// occurring element
+int findOdd(int arr[], int n)
+{
+    int res = 0, i;
+    for (i = 0; i < n; i++)
+        res ^= arr[i];
+    return res;
+}
+
+The following are many other interesting problems using XOR operator.
+
+#Find the Missing Number
+#swap two numbers without using a temporary variable
+#A Memory Efficient Doubly Linked List
+#Find the two non-repeating elements.
+#Find the two numbers with odd occurences in an unsorted-array.
+#Add two numbers without using arithmetic operators.
+#Swap bits in a given number/.
+#Count number of bits to be flipped to convert a to b .
+#Find the element that appears once.
+#Detect if two integers have opposite signs.
+
+4)The left-shift and right-shift operators are equivalent to multiplication and division by 2 respectively. As mentioned in point 1, it works only if numbers are positive.
+
+5)The & operator can be used to quickly check if a number is odd or even. The value of expression (x & 1) would be non-zero only if x is odd, otherwise the value would be zero.
+
+6)The ~ operator should be used carefully. The result of ~ operator on a small number can be a big number if the result is stored in an unsigned variable. And the result may be a negative number if the result is stored in a signed variable (assuming that the negative numbers are stored in 2’s complement form where the leftmost bit is the sign bit)
+
+
+1) Comma as an operator:
+The comma operator (represented by the token, ) is a binary operator that evaluates its first operand and discards the result, it then evaluates the second operand and returns this value (and type).
+
+/* comma as an operator */
+int i = (5, 10); /* 10 is assigned to i*/
+int j = (f1(), f2()); /* f1() is called (evaluated) first followed by f2().
+                      The returned value of f2() is assigned to j */
+
+
+2) Comma as a separator:
+Comma acts as a separator when used with function calls and definitions, function like macros, variable declarations, enum declarations, and similar constructs.
+/* comma as a separator */
+int a = 1, b = 2;
+void fun(x, y);
+
+
+The use of comma as a separator should not be confused with the use as an operator. For example, in below statement, f1() and f2() can be called in any order.
+/* Comma acts as a separator here and doesn't enforce any sequence.
+    Therefore, either f1() or f2() can be called first */
+void fun(f1(), f2());
+
+
+
+  int a = 10, b = 20;
+  (a, b) = 30; // Since b is l-value, this statement is valid in C++, but not in C.
+  printf("b = %d", b);
+
+
+#include <stdio.h>
+int main()
+{
+    int x = 10;
+    int y = (x++, ++x);
+    printf("%d", y);
+    getchar();
+    return 0;
+}
+12
+
+
+#include <stdio.h>
+int main()
+{
+    int x = 10, y;
+
+    // The following is equivalent
+    // to y = x + 2 and x += 3,
+    // with two printings
+    y = (x++,
+         printf("x = %d\n", x),
+         ++x,
+         printf("x = %d\n", x),
+         x++);
+
+    // Note that last expression is evaluated
+    // but side effect is not updated to y
+    printf("y = %d\n", y);
+    printf("x = %d\n", x);
+
+    return 0;
+}
+x = 11
+x = 12
+y = 12
+x = 13
+
+
+
+A comma operator question
+Consider the following C programs.
+
+#include<stdio.h>
+int main(void)
+{
+    int a = 1, 2, 3;
+    printf("%d", a);
+    return 0;
+}
+
+
+#include<stdio.h>
+int main(void)
+{
+    int (a = 1), 2, 3;
+    printf("%d", a);
+    return 0;
+}
+
+#include<stdio.h>
+int main(void)
+{
+    int (a = 1, 2,) 3;
+    printf("%d", a);
+    return 0;
+}
+
+
+    
+int x = 10, y = 10; 
+    printf("%d \n", sizeof(x == y));
+    printf("%d \n", sizeof(x < y));
+    return 0;
+Output:
+4
+4
+
+
+lvalue and rvalue in C language
+L-value: “l-value” refers to memory location which identifies an object. l-value may appear as either left hand or right hand side of an assignment operator(=). l-value often represents as identifier.
+
+Expressions referring to modifiable locations are called “modifiable l-values“. A modifiable l-value cannot have an array type, an incomplete type, or a type with the const attribute.
+
+R-value: r-value” refers to data value that is stored at some address in memory. A r-value is an expression that can’t have a value assigned to it which means r-value can appear on right but not on left hand side of an assignment operator(=).
+
+
+
+// declare a, b an object of type 'int'
+int a = 1, b;
+
+a + 1 = b; // Error, left expression is
+           // is not variable(a + 1)
+
+// declare pointer variable 'p', and 'q'
+int *p, *q; // *p, *q are lvalue
+
+*p = 1; // valid l-value assignment
+
+// below is invalid - "p + 2" is not an l-value
+// p + 2 = 18;
+
+q = p + 5; // valid - "p + 5" is an r-value
+
+
+
+// Below is valid - dereferencing pointer
+// expression gives an l-value
+*(p + 2) = 18;
+
+p = &b;
+
+int arr[20]; // arr[12] is an lvalue; equivalent
+              // to *(arr+12)
+              // Note: arr itself is also an lvalue
+
+struct S { int m; };
+
+struct S obj; // obj and obj.m are lvalues
+
+// ptr-> is an lvalue; equivalent to (*ptr).m
+// Note: ptr and *ptr are also lvalues
+struct S* ptr = &obj;
+Note: The unary & (address-of) operator requires an lvalue as its operand. That is, &n is a valid expression only if n is an lvalue. Thus, an expression such as &12 is an error. Again, 12 does not refer to an object, so it’s not addressable. For instance,
+
+
+// declare a as int variable and
+// 'p' as pointer variable
+int a, *p;
+p = &a; // ok, assignment of address
+        // at l-value
+&a = p;    // error: &a is an r-value
+
+int x, y;
+(  x < y ? y : x) = 0; // It's valid because the ternary
+                  // expression preserves the "lvalue-ness"
+                 // of both its possible return values
+
+
+Increment (Decrement) operators require L-value Expression
+What will be the output of the following program?
+#include<stdio.h>
+int main()
+{
+   int i = 10;
+   printf("%d", ++(-i));
+   return 0;
+}
+A) 11 B) 10 C) -9 D) None
+Answer: D, None – Compilation Error.
+Explanation:
+
+
+
+In C/C++ the pre-increment (decrement) and the post-increment (decrement) operators require an L-value expression as operand. Providing an R-value or a const qualified variable results in compilation error.
+
+In the above program, the expression -i results in R-value which is operand of pre-increment operator. The pre-increment operator requires an L-value as operand, hence the compiler throws an error.
+
+The increment/decrement operators needs to update the operand after the sequence point, so they need an L-value. The unary operators such as -, +, won’t need L-value as operand. The expression -(++i) is valid.
+
+
+Operator precedence determines which operator is performed first in an expression with more than one operators with different precedence.
+Operators Associativity is used when two operators of same precedence appear in an expression. Associativity can be either Left to Right or Right to Left.
+
+1) Associativity is only used when there are two or more operators of same precedence.
+The point to note is associativity doesn’t define the order in which operands of a single operator are evaluated
+For example, consider the following program, associativity of the + operator is left to right, but it doesn’t mean f1() is always called before f2(). The output of the following program is in-fact compiler dependent. See this for details.
+    int p = f1() + f2();
+
+4) Comma has the least precedence among all operators and should be used carefully For example consider the following program, the output is 1.
+#include <stdio.h>
+int main()
+{
+    int a;
+    a = 1, 2, 3; // Evaluated as (a = 1), 2, 3
+    printf("%d", a);
+    return 0;
+}
+
+A sequence point defines any point in a computer program’s execution at which it is guaranteed that all side effects of previous evaluations will have been performed, and no side effects from subsequent evaluations have yet been performed. 
+
+
+   // Since && defines a sequence point after first operand, it is guaranteed that f1() is completed first.
+   int p = f1() && f2();   
+
+   // Since comma operator defines a sequence point after first operand, it is  guaranteed that f1() is completed first.
+  int p = (f1(), f2());
+
+
+   // Since ? operator defines a sequence point after first operand, it isguaranteed that f1() is completed first.
+  int p = f1()? f2(): 3;
+
+
+
+
+   int i = 8;
+   int p = i++*i++;
+It may be 64, 72, or may be something else. The subexpression i++ causes a side effect, it modifies i’s value, which leads to undefined behavior since i is also referenced elsewhere in the same expression.
+
+
+Implement Your Own sizeof
+#include<stdio.h>
+#define my_sizeof(type) (char *)(&type+1)-(char*)(&type)
+int main()
+{
+    double x; 
+    printf("%ld", my_sizeof(x));
+    getchar();
+    return 0;
+}
+
+
+the sizeof() operator only takes into account the type of the operand, which may be an expression or the name of a type (i.e int, double, float etc) and not the value obtained on evaluating the expression. Hence, the operand inside the sizeof() operator is not evaluated. 
+
+It is evaluated only if the type of the operand is variable length array because in that case, the size can be determined only after the expression is evaluated.
+
+It is a compile time unary operator which can be used to compute the size of its operand. The result of sizeof is of unsigned integral type which is usually denoted by size_t. sizeof can be applied to any data-type, including primitive types such as integer and floating-point types, pointer types, or compound datatypes such as Structure, union etc.
+
+
+1. To find out number of elements in a array.
+Sizeof can be used to calculate number of elements of the array automatically.
+    int arr[] = { 1, 2, 3, 4, 7, 98, 0, 12, 35, 99, 14 };
+    printf("Number of elements:%lu ", sizeof(arr) / sizeof(arr[0]));
+
+2. To allocate a block of memory dynamically.
+sizeof is greatly used in dynamic memory allocation. For example, if we want to allocate memory for which is sufficient to hold 10 integers and we don’t know the sizeof(int) in that particular machine. We can allocate with the help of sizeof.
+int* ptr = (int*)malloc(10 * sizeof(int));
+
+
+The operand either may be a data-type or an expression. sizeof(char). 
+The expression is used only for getting the type of operand and not evaluation.  int int_size = sizeof(i++);
+
+
+The sizeof for a struct is not always equal to the sum of sizeof of each individual member. This is because of the padding added by the compiler to avoid alignment issues. Padding is only added when a structure member is followed by a member with a larger size or at the end of the structure.
+
+When the sizeof() method is passed a variable size structure:
+In this case, the sizeof() operator evaluates the parameter to see if there is any change of size. If found, then first the size is modified then the final size is returned
+
+#include <stdio.h>
+int main()
+{
+    int x = 3;
+    printf("%d\n", sizeof(int[x++]));
+    printf("x = %d", x);
+
+    return 0;
+}
+Output:
+12
+x = 4
+
+
+
+#include <stdio.h>
+int main()
+{
+    int x = 3;
+    printf("%d\n", sizeof(int[++x]));
+    printf("x = %d", x);
+
+    return 0;
+}
+Output:
+16
+x = 4
+
+
+
+strlen() is a predefined function in C whose definition is contained in the header file “string.h”.
+Sizeof operator is a compile time unary operator
+strlen() accepts a pointer to an array as argument and walks through memory at run time from the address we give it looking for a NULL character and counts up how many memory locations it passed before it finds one.
+The main task of strlen() is to count the length of an array or string.
+
+How to find size of array in C/C++ without using sizeof ?
+
+Method 1 (Writing our own sizeof)
+# define my_sizeof(type) ((char *)(&type+1)-(char*)(&type))
+    int  arr[] = {1, 2, 3, 4, 5, 6};
+    int size = my_sizeof(arr)/my_sizeof(arr[0]);
+
+Method 2(Using a pointer hack)
+The following solution is very short when compared to the above solution. Number of elements in an array A can be found out using the expression
+int size = *(&arr + 1) - arr;
+
+How does this work?
+Here the pointer arithmetic does its part. We don’t need to explicitly convert each of the locations to character pointers.
+
+&arr ==> Pointer to an array of 6 elements.
+         [See this for difference between &arr
+          and arr]
+
+(&arr + 1) ==> Address of 6 integers ahead as
+               pointer type is pointer to array
+               of 6 integers.
+
+*(&arr + 1) ==> Same address as (&arr + 1), but
+                type of pointer is "int *".
+
+*(&arr + 1) - arr ==> Since *(&arr + 1) points
+                   to the address 6 integers
+                   ahead of arr, the difference
+                   between two is 6.
+
+
+To find sum of two numbers without using any operator
+//this uses inc/dec operator
+#include<stdio.h>
+int main()
+{
+    int a = 10, b = 5, sum;
+    while(b > 0)
+    {
+        a++;
+        b--;
+    }
+    printf("Sum = %d",a);
+    return 0;
+}
+
+
+We can use printf() to find sum of two numbers as printf() returns the number of characters printed. The width field in printf() can be used to find the sum of two numbers. We can use ‘*’ which indicates the minimum width of output. For example, in the statement “printf(“%*d”, width, num);”, the specified ‘width’ is substituted in place of *, and ‘num’ is printed within the minimum width specified. If number of digits in ‘num’ is smaller than the specified ‘width’, the output is padded with blank spaces. If number of digits are more, the output is printed as it is (not truncated). In the following program, add() returns sum of x and y. It prints 2 spaces within the width specified using x and y. So total characters printed is equal to sum of x and y. That is why add() returns x+y.
+
+#include<stdio.h>
+
+int add(int x, int y)
+{
+    return printf("%*c%*c", x, ' ', y, ' ');
+}
+
+// Driver code
+int main()
+{
+    printf("Sum = %d", add(3, 4));
+    return 0;
+}
+       Sum = 7
+
+The output is seven spaces followed by “Sum = 7”. We can avoid the leading spaces by using carriage return.
+
+
+The following program prints output without any leading spaces.
+#include<stdio.h>
+int add(int x, int y)
+{
+    return printf("%*c%*c", x, '\r', y, '\r');
+}
+
+// Driver code
+int main()
+{
+    printf("Sum = %d", add(3, 4));
+    return 0;
+}
+
+
+In the following condition : a ? b : c
+If a is true, b will be executed. Otherwise, c will be executed.
+We can code the equation as : Result = (!!a)*b + (!a)*c
+In above equation, is a is true, result will be b. Otherwise, result will be c.
+
+Return Type:
+It is another interesting fact. The ternary operator has return type. The return type depends on exp2, and convertibility of exp3 into exp2 as per usual\overloaded conversion rules. If they are not convertible, the compiler throws an error. See the examples below,
+
+The following program compiles without any error. The return type of ternary expression is expected to be float (as that of exp2) and exp3 (i.e. literal zero – int type) is implicitly convertible to float.
+
+#include <iostream>
+using namespace std;
+int main()
+{
+   int test = 0;
+   float fvalue = 3.111f;
+   cout << (test ? fvalue : 0) << endl;
+   return 0;
+}
+
+
+The following program will not compile, because the compiler is unable to find return type of ternary expression or implicit conversion is unavailable between exp2 (char array) and exp3 (int).
+#include <iostream>
+using namespace std;
+int main()
+{
+   int test = 0;
+   cout << test ? "A String" : 0 << endl;
+   return 0;
+}
+
+
+A sequence point defines any point in a computer program's execution at which it is guaranteed that all side effects of previous evaluations will have been performed, and no side effects from subsequent evaluations have yet been performed. 
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+Diffference between #define and const in C?
+#define is a preprocessor directive. const variables are actual variables like other normal variable.
+
+The big advantage of const over #define is type checking. We can also have poitners to const varaibles, we can pass them around, typecast them and any other thing that can be done with a normal variable. One disadvantage that one could think of is extra space for variable which is immaterial due to optimizations done by compilers.
+
+
+1) When we use include directive,
+2) When we use define for a constant,
+3) The macros can take function like arguments, the arguments are not checked for data type. For example, the following macro INCREMENT(x) can be used for x of any data type.
+#include <stdio.h>
+#define INCREMENT(x) ++x
+int main()
+{
+    char *ptr = "GeeksQuiz";
+    int x = 10;
+    printf("%s  ", INCREMENT(ptr));
+    printf("%d", INCREMENT(x));
+    return 0;
+}
+
+4) The macro arguments are not evaluated before macro expansion. For example, consider the following program
+#include <stdio.h>
+#define MULTIPLY(a, b) a*b
+int main()
+{
+    // The macro is expended as 2 + 3 * 3 + 5, not as 5*8
+    printf("%d", MULTIPLY(2+3, 3+5));
+    return 0;
+}
+// Output: 16
+Output:
+16
+
+The previous problem can be solved using following program
+#include <stdio.h>
+//here, instead of writing a*a we write (a)*(b)
+#define MULTIPLY(a, b) (a)*(b)
+
+
+5) The tokens passed to macros can be concatenated using operator ## called Token-Pasting operator.
+#include <stdio.h>
+#define merge(a, b) a##b
+int main()
+{
+    printf("%d ", merge(12, 34));
+}
+Output:
+1234
+
+6) A token passed to macro can be converted to a string literal by using # before it.
+#include <stdio.h>
+#define get(a) #a
+int main()
+{
+    // GeeksQuiz is changed to "GeeksQuiz"
+    printf("%s", get(GeeksQuiz));
+}
+Output:
+GeeksQuiz
+
+7) The macros can be written in multiple lines using ‘\’. The last line doesn’t need to have ‘\’.
+#include <stdio.h>
+#define PRINT(i, limit) while (i < limit) \
+                        { \
+                            printf("GeeksQuiz "); \
+                            i++; \
+                        }
+int main()
+{
+    int i = 0;
+    PRINT(i, 3);
+    return 0;
+}
+Output:
+GeeksQuiz GeeksQuiz GeeksQuiz
+
+8) The macros with arguments should be avoided as they cause problems sometimes. And Inline functions should be preferred as there is type checking parameter evaluation in inline functions. From C99 onward, inline functions are supported by C language also.
+For example consider the following program. From first look the output seems to be 1, but it produces 36 as output.
+#include <stdio.h>
+#define square(x) x*x
+int main()
+{
+    // Expanded as 36/6*6
+    int x = 36/square(6);
+    printf("%d", x);
+    return 0;
+}
+Output:
+36
+If we use inline functions, we get the expected output. Also, the program given in point 4 above can be corrected using inline functions.
+#include <stdio.h>
+static inline int square(int x) { return x*x; }
+int main()
+{
+int x = 36/square(6);
+printf("%d", x);
+return 0;
+}
+Output:
+1
+
+
+9) Preprocessors also support if-else directives which are typically used for conditional compilation.
+
+10) A header file may be included more than one time directly or indirectly, this leads to problems of redeclaration of same variables/functions. To avoid this problem, directives like defined, ifdef and ifndef are used.
+11) There are some standard macros which can be used to print program file (__FILE__), Date of compilation (__DATE__), Time of compilation (__TIME__) and Line Number in C code (__LINE__)
+
+12) We can remove already defined macros using :
+#undef MACRO_NAME
+Another interesting fact about macro using (#undef): u can un-define or define functions(argument macros) depending upon a conditon. 
+
+Macros are no longer recommended as they cause following issues. There is a better way in modern compilers that is inline functions and const variable.
+
+functions are not preprocessed but compiled.
+Also, macros do not check for compilation error (if any)
+
+Macros:
+#include<stdio.h>
+#define CUBE(b) b*b*b
+int main()
+{
+     printf("%d", CUBE(1+2));
+     return 0;
+}
+Output: Unexpected output
+7
+
+Functions:
+#include<stdio.h>
+int cube(int a)
+{
+     return a*a*a;
+}
+int main()
+{
+    printf("%d", cube(1+2));
+    return 0;
+}
+Output: As expected
+27
+
+
+The speed at which macros and functions differs. Macros are typically faster than functions as they don’t involve actual function call overhead.
+
+#include<stdio.h>
+#define PRINT(x) (#x)
+int main()
+{
+printf("%f",PRINT(5.009));
+return 0;
+}
+
+prog.c: In function ‘main’:
+prog.c:5:8: warning: format ‘%f’ expects argument of type ‘double’, but argument 2 has type ‘char *’ [-Wformat=]
+ printf("%f",PRINT(5.009));
+        ^
+
+your macro expansion should not result into the extra semicolon at the end . check it
+
+
+C's offsetof() macro is an ANSI C library feature found in stddef.h.
+It evaluates to the offset (in bytes) of a given member within a struct or union type, an expression of type size_t. The offsetof() macro takes two parameters, the first being a structure name, and the second being the name of a member within the structure
+
+We know that the elements in a structure will be stored in sequential order of their declaration.
+How to extract the displacement of an element in a structure? We can make use of offsetof macro.
+The following non-standard macro can be used to get the displacement of an element in bytes from the base address of the structure variable.
+#define OFFSETOF(TYPE, ELEMENT) ((size_t)&(((TYPE *)0)->ELEMENT))
+
+
+__STDC__ Macro is used to confirm the compiler standard. Generally it holds the value 1 which means that the compiler conforms to ISO Standard C.
+__STDC__HOSTED Macro: This macro holds the value 1 if the compiler’s target is a hosted environment. A hosted environment is a facility in which a third-party holds the compilation data and runs the programs on its own computers. Generally, the value is set to 1.
+q
+
+There are 4 main types of preprocessor directives:
+
+Macros
+File Inclusion
+Conditional Compilation
+Other directives
+
+The ‘#define’ directive is used to define a macro.
+Note: There is no semi-colon(‘;’) at the end of macro definition. Macro definitions do not need a semi-colon to end.
+Macros with arguments: We can also pass arguments to macros.
+
+File Inclusion: This type of preprocessor directive tells the compiler to include a file in the source code program.
+
+Conditional Compilation: Conditional Compilation directives are type of directives which helps to compile a specific portion of the program or to skip compilation of some specific part of the program based on some conditions. This can be done with the help of two preprocessing commands ‘ifdef‘ and ‘endif‘.
+
+
+#pragma Directive: This directive is a special purpose directive and is used to turn on or off some features. This type of directives are compiler-specific i.e., they vary from compiler to compiler. Some of the #pragma directives are discussed below:
+
+
+#pragma startup and #pragma exit: These directives helps us to specify the functions that are needed to run before program startup( before the control passes to main()) and just before program exit (just before the control returns from main()).
+
+#pragma warn Directive: This directive is used to hide the warning message which are displayed during compilation.
+We can hide the warnings as shown below:
+
+#pragma warn -rvl: This directive hides those warning which are raised when a function which is supposed to return a value does not returns a value.
+
+#pragma warn -par: This directive hides those warning which are raised when a function does not uses the parameters passed to it.
+
+#pragma warn -rch: This directive hides those warning which are raised when a code is unreachable. For example: any code written after the return statement in a function is unreachable.
+
+
+// C program to demonstrate importance
+// of typedef over #define for data types
+#include <stdio.h>
+typedef char* ptr;
+#define PTR char*
+int main()
+{
+    ptr a, b, c;
+    PTR x, y, z;
+    printf("sizeof a:%u\n" ,sizeof(a) );
+    printf("sizeof b:%u\n" ,sizeof(b) );
+    printf("sizeof c:%u\n" ,sizeof(c) );
+    printf("sizeof x:%u\n" ,sizeof(x) );
+    printf("sizeof y:%u\n" ,sizeof(y) );
+    printf("sizeof z:%u\n" ,sizeof(z) );
+    return 0;
+}
+Output:
+sizeof a:8
+sizeof b:8
+sizeof c:8
+sizeof x:8
+sizeof y:1
+sizeof z:1
+From the output of the above program size of “a” which is a pointer is 8 (on a machine where pointers are stored using 8 bytes). In the above program, when the compiler comes to
+
+typedef char* ptr;
+ptr a, b, c;
+the statement effectively becomes
+char *a, *b, *c;
+This declares a, b, c as char*.
+
+In contrast, #define works like this:
+
+#define PTR char*
+PTR x, y, z;
+the statement effectively becomes
+char *x, y, z;
+
+
+typedef is limited to giving symbolic names to types only,
+
+typedef interpretation is performed by the compiler where #define statements are performed by preprocessor.
+
+#define should not be terminated with a semicolon, but typedef should be terminated with semicolon.
+
+#define will just copy-paste the definition values at the point of use, while typedef is the actual definition of a new type.
+
+typedef follows the scope rule which means if a new type is defined in a scope (inside a function), then the new type name will only be visible till the scope is there. In case of #define, when preprocessor encounters #define, it replaces all the occurrences, after that (No scope rule is followed).
+
+
+How to Count Variable Numbers of Arguments in C?
+C supports variable numbers of arguments. But there is no language provided way for finding out total number of arguments passed. User has to handle this in one of the following ways:
+1) By passing first argument as count of arguments.
+2) By passing last argument as NULL (or 0).
+3) Using some printf (or scanf) like mechanism where first argument has placeholders for rest of the arguments.
+
+Variable Length Argument in C
+Variable number of arguments are represented by three dotes (…)
+
+#include <stdarg.h>
+#include <stdio.h>
+
+// this function returns minimum of integer
+// numbers passed. First argument is count
+// of numbers.
+int min(int arg_count, ...)
+{
+        int i;
+        int min, a;
+
+        // va_list is a type to hold information about
+        // variable arguments
+        va_list ap;
+
+        // va_start must be called before accessing
+        // variable argument list
+        va_start(ap, arg_count);
+
+        // Now arguments can be accessed one by one
+        // using va_arg macro. Initialize min as first
+        // argument in list
+        min = va_arg(ap, int);
+        // traverse rest of the arguments to find out minimum
+        for (i = 2; i <= arg_count; i++)
+                if ((a = va_arg(ap, int)) < min)
+                        min = a;
+
+        // va_end should be executed before the function
+        // returns whenever va_start has been previously
+        // used in that function
+        va_end(ap);
+
+        return min;
+}
+
+// Driver code
+int main()
+{
+        int count = 5;
+        printf("Minimum value is %d", min(count, 12, 67, 6, 7, 100));
+        return 0;
+}
+
+Use int parameter and va_start macro to initialize the va_list variable to an argument list. The macro va_start is defined in stdarg.h header file.
+Use va_arg macro and va_list variable to access each item in argument list.
+macro va_end to clean up the memory assigned to va_list variable.
+
+
+X-Macros in C
+X-Macros are based on the property of nested macros and the ability to define macros inside other macros. X-Macros are very powerful pre-processor technique in the sense that it can create a self-maintaining and inter-dependent piece of code. When the change of one part of a program leads to a change in another part, then the code is said to be inter-dependent.
+
+Syntax:
+An X macro application consists of two parts:
+
+The definition of the list’s elements:
+#define VARIABLES \
+    X(value1, 1)  \
+    .
+    .
+    .  \
+    X(valueN, N)
+Expansion(s) of the list to generate fragments of declarations or statements:
+#define X(name) int name;
+    VARIABLES
+#undef X
+
+Advantages of X-Macros
+X-Macros are extensively used in Operating System development by creating separate header files for maintainability as well as readability
+Helps to maintain complex programming easily
+it can create a self-maintaining and inter-dependent piece of code
+Disadvantages of X-Macros
+
+The code becomes less readable
+Code is complex to understand
+Commonly used for internal programming only, like OS programming.
+
+
+Q:C Program to print environment variables ?
+// Most of the C compilers support a third parameter to main which
+// store all envorinment variables
+int main(int argc, char *argv[], char * envp[])
+{
+    int i;
+    for (i = 0; envp[i] != NULL; i++)
+        printf("\n%s", envp[i]);
+    getchar();
+    return 0;
+}
+
+
+“array” is a “pointer to the first element of array” but “&array” is a “pointer to whole array.
+
+Since “array” is pointer to int, addition of 1 resulted in an address with increment of 4 (assuming int size in your machine is 4 bytes). Since “&array” is pointer to array of 5 ints, addition of 1 resulted in an address with increment of 4 x 5 = 20 = 0x14.
+
+Why C treats array parameters as pointers?
+Array parameters treated as pointers because of efficiency. It is inefficient to copy the array data in terms of both memory and time; and most of the times, when we pass an array our intention is to just tell the array we interested in, not to create a copy of the array.
+
+Advantages of an Array in C/C++:
+Random access of elements using array index.
+Use of less line of code as it creates a single array of multiple elements.
+Easy access to all the elements.
+Traversal through the array becomes easy using a single loop.
+Sorting becomes easy as it can be accomplished by writing less line of code.
+
+Disadvantages of an Array in C/C++:
+Allows a fixed number of elements to be entered which is decided at the time of declaration. Unlike a linked list, an array in C is not dynamic.
+Insertion and deletion of elements can be costly since the elements are needed to be managed in accordance with the new memory allocation.
+
+No Index Out of bound Checking:
+There is no index out of bounds checking in C/C++,
+
+In C, it is not compiler error to initialize an array with more elements than the specified size. BUTT, it gives warning , excess intilizer elements
+
+The elements are stored at contiguous memory locations
+
+In C, it is possible to have array of all types except following.
+1) void.
+2) functions.
+
+But we can have array of void pointers(void *arr[100];) and function pointers.
+
+3) Arrays are always passed as pointer to functions.
+4) A character array initialized with double quoted string has last element as ‘\0’.
+
+5) Like other variables, arrays can be allocated memory in any of the three segments, data, heap, and stack. Dynamically allocated arrays are allocated memory on heap, static or global arrays are allocated memory on data segment and local arrays are allocated memory on stack segment.
+
+ When we assign a struct variable to another, all members of the variable are copied to the other struct variable. But what happens when the structure contains pointer to dynamically allocated memory and what if it contains an array?
+
+ struct variable st1 contains pointer to dynamically allocated memory. When we assign st1 to st2, str pointer of st2 also start pointing to same memory location. This kind of copying is called Shallow Copy.
+
+Now, what about arrays? The point to note is that the array members are not shallow copied, compiler automatically performs Deep Copy for array members.
+struct test contains array member str[]. When we assign st1 to st2, st2 has a new copy of the array. So st2 is not changed when we change str[] of st1.
+
+
+“Array of pointers” is an array of the pointer variables. It is also known as pointer arrays.
+Syntax: int *var_name[array_size];
+
+We can likewise make an array of pointers to the character to store a list of strings.
+
+#include <stdio.h>
+const int size = 4;
+void main()
+{
+    // array of pointers to a character
+    // to store a list of strings
+    char* names[] = {
+        "amit",
+        "amar",
+        "ankit",
+        "akhil"
+    };
+    int i = 0;
+    for (i = 0; i < size; i++) {
+        printf("%s\n", names[i]);
+    }
+}
+Output:
+amit
+amar
+ankit
+akhil
+
+
+int arr[5] = { 1, 2, 3, 4, 5 };
+int *ptr = arr;
+In this program, we have a pointer ptr that points to the 0th element of the array. Similarly, we can also declare a pointer that can point to whole array instead of only one element of the array. This pointer is useful when talking about multidimensional arrays.
+Syntax::   data_type (*var_name)[size_of_array];
+Example::  int (*ptr)[10];
+Here ptr is pointer that can point to an array of 10 integers. Since subscript have higher precedence than indirection, it is necessary to enclose the indirection operator and pointer name inside parentheses.
+
+Note : The pointer that points to the 0th element of array and the pointer that points to the whole array are totally different. 
+
+    // Pointer to an integer
+    int *p;
+
+    // Pointer to an array of 5 integers
+    int (*ptr)[5];
+    int arr[5];
+
+    // Points to 0th element of the arr.
+    p = arr;
+
+    // Points to the whole array arr.
+    ptr = &arr;
+
+
+
+&array is an alias for &array[0] and returns the address of the first element in array
+
+char array[] = “abc” sets the first four elements in array to ‘a’, ‘b’, ‘c’, and ‘\0’
+
+char *pointer = “abc” sets pointer to the address of the “abc” string (which may be stored in read-only memory and thus unchangeable)
+
+Pointer variable can be assigned a value whereas array variable cannot be.
+int a[10];
+int *p;
+p=a; /*legal*/
+a=p; /*illegal*/
+Arithmetic on pointer variable is allowed.
+p++; /*Legal*/
+a++; /*illegal*/
+
+
+Array parameters treated as pointers because of efficiency. It is inefficient to copy the array data in terms of both memory and time; and most of the times, when we pass an array our intention is to just tell the array we interested in, not to create a copy of the array.
+
+Compiler uses pointer arithmetic to access array element. For example, an expression like “arr[i]” is treated as *(arr + i) by the compiler. That is why the expressions like *(arr + i) work for array arr, and expressions like ptr[i] also work for pointer ptr.
+
+A shorthand array notation in C for repeated values
+In C, when there are many repeated values, we can use a shorthand array notation to define array. Below program demonstrates same.
+int array[10] = {1, 1, 1, 1, 0, 0, 2, 2, 2, 2};
+int array[10] = {[0 ... 3]1, [6 ... 9]2};
+
+The statements ‘char s[] = “geeksquiz”‘ creates a character array which is like any other array and we can do all array operations. The only special thing about this array is, although we have initialized it with 9 elements, its size is 10 (Compiler automatically adds ‘\0’)
+
+The statement ‘char *s = “geeksquiz”‘ creates a string literal. The string literal is stored in the read-only part of memory by most of the compilers. The C and C++ standards say that string literals have static storage duration, any attempt at modifying them gives undefined behaviour.
+s is just a pointer and like any other pointer stores address of string literal.
+
+atoi() : The atoi() function takes a character array or string literal as an argument and returns its value. 
+atoi() works only for C-style strings (character array and string literal)
+Similarly, for converting String to Double, atof() 
+
+
+How to pass an array by value in C ?
+In C, array name represents address and when we pass an array, we actually pass address and the parameter receiving function always accepts them as pointers
+
+How to pass array by value, i.e., how to make sure that we have a new copy of array when we pass it to function?
+This can be done by wrapping the array in a structure and creating a variable of type of that structure and assigning values to that array. After that, passing the variable to some other function and modifying it as per requirements. Note that array members are copied when passed as parameter, but dynamic arrays are not. So this solution works only for non-dynamic arrays (created without new or malloc).
+
+
+The strdup() and strndup() functions are used to duplicate a string.
+Syntax : char *strdup(const char *s);
+
+This function returns a pointer to a null-terminated byte string, which is a duplicate of the string pointed to by s. The memory obtained is done dynamically using malloc and hence it can be freed using free().
+
+
+strndup() :
+syntax: char *strndup(const char *s, size_t n);
+This function is similar to strdup(), but copies at most n bytes.
+Note: If s is longer than n, then only n bytes are copied, and a NULL (”) is added at the end.
+
+
+strpbrk() in C
+This function finds the first character in the string s1 that matches any character specified in s2 (It excludes terminating null-characters).
+Syntax :: char *strpbrk(const char *s1, const char *s2)
+Parameters ::
+s1 : string to be scanned.
+s2 : string containing the characters to match.
+Return Value ::
+It returns a pointer to the character in s1 that
+matches one of the characters in s2, else returns NULL.
+
+strcmp() in C/C++
+strcmp() is a built-in library function and is declared in <string.h> header file. This function takes two strings as arguments and compare these two strings lexicographically.
+
+This process will be continued until a character in either string is NULL or the characters are unequal.
+
+What does strcmp() return?
+This function can return three different integer values based on the comparison:
+
+1)
+Zero ( 0 ): A value equal to zero when both strings are found to be identical. That is, That is, All of the characters in both strings are same.
+
+2)
+Greater than zero ( >0 ): A value greater than zero is returned when the first not matching character in leftStr have the greater ASCII value than the corresponding character in rightStr or we can also say
+If character in leftStr is lexicographically
+after the character of rightStr
+
+3)
+Less than Zero ( <0 ): A value less than zero is returned when the first not matching character in leftStr have lesser ASCII value than the corresponding character in rightStr.
+If character in leftStr is lexicographically
+before the character of rightStr
+
+Important point : When the strings are not same, you will find that the value returned by the strcmp() function is the difference between the ASCII values of first unmatched character in leftStr and rightStr in both the cases.
+
+strcpy() is a standard library function in C/C++ and is used to copy one string to another. 
+Syntax:
+char* strcpy(char* dest, const char* src);
+
+The term “punctuation” as defined by this function includes all printable characters that are neither alphanumeric nor a space. For example ‘@’, ‘$’, etc.
+
+
+strspn() function in C
+The strspn() function returns the length of the initial substring of the string pointed to by str1 that is made up of only those character contained in the string pointed to by str2.
+
+Syntax :: size_t strspn(const char *str1, const char *str2)
+str1 : string to be scanned.
+str2 : string containing the characters to match.
+Return Value : This function returns the number of characters in the initial segment of str1 which consist only of characters from str2.
+
+strtok() and strtok_r() functions in C with examples
+C provides two functions strtok() and strtok_r() for splitting a string by some delimiter. Splitting a string is a very common task. For example, we have a comma separated list of items from a file and we want individual items in an array.
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+When the continue statement is executed in the loop, the code inside the loop following the continue statement will be skipped and next iteration of the loop will begin.
+
+Nested Loops: We can also use break statement while working with nested loops. If the break statement is used in the innermost loop. The control will come out only from the innermost loop.
+
+Infinite Loops: break statement can be included in an infinite loop with a condition in order to terminate the execution of the infinite loop.
+
+What happens if loop till Maximum of Signed and Unsigned in C/C++?
+
+    unsigned char i;
+    for (i=0; i<256; i++)
+        printf("%d ",i);
+
+We know that the size of the character variable is 8 bits or 1 byte. Hence by base 2 representation of decimal numbers, the maximum number in 8 bits is 11111111.This is because the range of unsigned numbers in 8 bits ranges from 0 to 28-1
+Now (11111111)2 = (255)10
+If we drive the loop upto 255 starting from 0, it will execute the statement in the loop 256 times (both 0 and 255 inclusive). As the loop reaches to (255)10, After executing it, the variable “i” is incremented by 1 i.e. going by the 2s complement arithmetic,
+(11111111)2 + (00000001)2 = (00000000)10
+
+Note: the end carry is discarded in this case; hence the final incremented number is 0, which results in re-execution of the loop, hence the loop runs for the infinite times. Therefore the above condition can be avoided if we put limit to unsigned char i to be lesser than 255 rather than 256.
+
+
+    signed char i;
+    for (i=0; i<128; i++)
+        printf("%d ",i);
+
+Signed char range belongs from -27 to 27-1, hence it also goes for the infinite execution if the limit is <128.
+
+Note that the 2s complement of (127)10 is (01111111)2 adding 1 to which will give us (10000000)2, which is –(128)10 when calculated from 2s complement form.
+
+
+The goto statement is a jump statement which is sometimes also referred to as unconditional jump statement. The goto statement can be used to "jump from anywhere to anywhere within a function".
+
+Syntax:
+Syntax1      |   Syntax2
+----------------------------
+goto label;  |    label:
+.            |    .
+.            |    .
+.            |    .
+label:       |    goto label;
+
+Suppose we need to write a program which prints numbers from 1 to 10 using the goto statement.
+
+Use of goto can be simply avoided using break and continue statements.
+
+
+Important Points:
+
+Use for loop when number of iterations is known beforehand, i.e. the number of times the loop body is needed to be executed is known.
+
+Use while loops where exact number of iterations is not known but the loop termination condition is known.
+
+Use do while loop if the code needs to be executed at least once like in Menu driven programs
+
+
+A nested loop puzzle
+Which of the following two code segments is faster? Assume that compiler makes no optimizations.
+
+/* FIRST */
+for(i=0;i<10;i++)
+  for(j=0;j<100;j++)
+    //do something
+
+/* SECOND */
+for(i=0;i<100;i++)
+  for(j=0;j<10;j++)
+    //do something
+Both code segments provide same functionality, and the code inside the two for loops would be executed same number of times in both code segments.
+If we take a closer look then we can see that the SECOND does more operations than the FIRST. It executes all three parts (assignment, comparison and increment) of the for loop more times than the corresponding parts of FIRST:
+
+The SECOND executes assignment operations ( j = 0 or i = 0) 101 times while FIRST executes only 11 times.
+The SECOND does 101 + 1100 comparisons (i < 100 or j < 10) while the FIRST does 11 + 1010 comparisons (i < 10 or j < 100).
+The SECOND executes 1100 increment operations (i++ or j++) while the FIRST executes 1010 increment operation.
+
+Below C++ code counts the number of increment operations executed in FIRST and SECOND, and prints the counts.
+//program to count number of increment
+//operations in FIRST and SECOND
+#include<iostream>
+using namespace std;
+int main()
+{
+  int c1 = 0, c2 = 0;
+
+  /* FIRST */
+  for(int i=0;i<10;i++,c1++)
+    for(int j=0;j<100;j++, c1++);
+      //do something
+
+  /* SECOND */
+  for(int i=0; i<100; i++, c2++)
+      for(int j=0; j<10; j++, c2++);
+        //do something
+
+  cout << " Count in FIRST = " <<c1 << endl;
+  cout << " Count in SECOND  = " <<c2 << endl;
+
+  getchar();
+  return 0;
+}
+Output:
+Count in FIRST = 1010
+ Count in SECOND  = 1100
+
+Below C++ code counts the number of comparison operations executed by FIRST and SECOND
+//program to count the number of comparison
+//operations executed by FIRST and SECOND */
+#include<iostream>
+
+using namespace std;
+
+int main()
+{
+   int c1 = 0, c2 = 0;
+   /* FIRST */
+   for(int i=0; ++c1&&i<10; i++)
+      for(int j=0; ++c1&&j<100;j++);
+     //do something
+   /* SECOND */
+   for(int i=0; ++c2&&i<100; i++)
+      for(int j=0; ++c2&&j<10; j++);
+      //do something
+
+   cout << " Count fot FIRST  " <<c1 << endl;
+   cout << " Count fot SECOND  " <<c2 << endl;
+   getchar();
+   return 0;
+}
+Output:
+Count fot FIRST  1021
+ Count fot SECOND  1201
+
+
+Switch case statements are a substitute for long if-else statements that compare a variable to several integral values
+Switch is a control statement that allows a value to change control of execution.
+
+The expression provided in the switch should result in a constant value otherwise it would not be valid.
+
+Valid expressions for switch:
+// Constant expressions allowed
+switch(1+2+23)
+switch(1*2+3%4)
+
+// Variable expression are allowed provided
+// they are assigned with fixed values
+switch(a*b+c*d)
+switch(a+b+c)
+
+Duplicate case values are not allowed.
+The default statement is optional
+
+The break statement is used inside the switch to terminate a statement sequence. When a break statement is reached, the switch terminates, and the flow of control jumps to the next line following the switch statement.
+
+The break statement is optional. If omitted, execution will continue on into the next case. The flow of control will fall through to subsequent cases until a break is reached.
+
+1) The expression used in switch must be integral type ( int, char and enum). Any other type of expression is not allowed.
+
+3) The default block can be placed anywhere. The position of default doesn’t matter, it is still executed if no match found.
+
+4) The integral expressions used in labels must be a constant expressions
+// A program with variable expressions in labels
+#include <stdio.h>
+int main()
+{
+    int x = 2;
+    int arr[] = {1, 2, 3};
+    switch (x)
+    {
+        case arr[0]: printf("Choice 1\n");
+        case arr[1]: printf("Choice 2\n");
+        case arr[2]: printf("Choice 3\n");
+    }
+    return 0;
+}
+Output:
+Compiler Error: case label does not reduce to an integer constant
+
+5) The statements written above cases are never executed After the switch statement, the control transfers to the matching case, the statements written before case are not executed.
+
+6) Two case labels cannot have same value
+
+You all are familiar with switch case in C/C++, but did you know you can use range of numbers instead of a single number or character in case statement.
+
+That is the case range extension of the GNU C compiler and not standard C or C++
+You can specify a range of consecutive values in a single case label, like this:
+case low ... high:
+It can be used for ranges of ASCII character codes like this:
+ case 'A' ... 'Z':
+You need to Write spaces around the ellipses … . For example, write this:
+// Correct  -   case 1 ... 5:
+// Wrong -    case 1...5:
+
+Error conditions:
+low > high : The compiler gives with an error message.
+Overlapping case values : If the value of a case label is within a case range that has already been used in the switch statement, the compiler gives an error message.
+
+If a reference of a function is passed to another function as an argument to call it, then it will be called as a Callback function.
+In C, a callback function is a function that is called through a function pointer.
+
+// A simple C program to demonstrate callback
+#include<stdio.h>
+
+void A()
+{
+    printf("I am function A\n");
+}
+
+// callback function
+void B(void (*ptr)())
+{
+    (*ptr) (); // callback to A
+}
+
+int main()
+{
+    void (*ptr)() = &A;
+
+    // calling function B and passing
+    // address of the function A as argument
+    B(ptr);
+
+   return 0;
+}
+
+
+exit() terminates the process normally.
+status: Status value returned to the parent process. Generally, a status value of 0 or EXIT_SUCCESS indicates success, and any other value or the constant EXIT_FAILURE is used to indicate an error. 
+
+exit() performs following operations.
+* Flushes unwritten buffered data.
+* Closes all open files.
+* Removes temporary files.
+* Returns an integer exit status to the operating system.
+
+The C standard atexit() function can be used to customize exit() to perform additional actions at program termination
+
+When exit() is called, any open file descriptors belonging to the process are closed and any children of the process are inherited by process 1, init, and the process parent is sent a SIGCHLD signal.
+
+The mystery behind exit() is that it takes only integer args in the range 0 – 255 . Out of range exit values can result in unexpected exit codes. An exit value greater than 255 returns an exit code modulo 256.
+For example, exit 9999 gives an exit code of 15 i.e. (9999 % 256 = 15).
+
+
+void abort ( void );
+
+Unlike exit() function, abort() may not close files that are open. It may also not delete temporary files and may not flush stream buffer. Also, it does not call functions registered with atexit().
+If we want to make sure that data is written to files and/or buffers are flushed then we should either use exit() or include a signal handler for SIGABRT.
+This function actually terminates the process by raising a SIGABRT signal, and your program can include a handler to intercept this signal
+
+void assert( int expression );
+If expression evaluates to 0 (false), then the expression, sourcecode filename, and line number are sent to the standard error, and then abort() function is called. If the identifier NDEBUG (“no debug”) is defined with #define NDEBUG then the macro assert does nothing.
+
+Now the question is that if we have exit() function then why C11 standard introduced _Exit()? Actually exit() function performs some cleaning before termination of the program like connection termination, buffer flushes etc. The _Exit() function in C/C++ gives normal termination of a program without performing any cleanup tasks. For example it does not execute functions registered with atexit.
+
+What is evaluation order of function parameters in C?
+It is compiler dependent in C. It is never safe to depend on the order of evaluation of side effects. 
+
+func (i++, i++);
+There is no guarantee (in either the C or the C++ standard language definitions) that the increments will be evaluated in any particular order. Either increment might happen first. func might get the arguments `2, 3′, or it might get `3, 2′, or even `2, 2′.
+
+3) In C, functions can return any type except arrays and functions. We can get around this limitation by returning pointer to array or pointer to function.
+
+Functions help us in reducing code redundancy. If functionality is performed at multiple places in software, then rather than writing the same code, again and again, 
+
+This also helps in maintenance as we have to change at one place if we make future changes to the functionality.
+
+Functions make code modular. Consider a big file having many lines of codes. It becomes really simple to read and use the code if the code is divided into functions.
+Functions provide abstraction. For example, we can use library functions without worrying about their internal working.
+
+Pass by Value: In this parameter passing method, values of actual parameters are copied to function’s formal parameters and the two types of parameters are stored in different memory locations. So any changes made inside functions are not reflected in actual parameters of caller.
+
+Pass by Reference Both actual and formal parameters refer to same locations, so any changes made inside the function are actually reflected in actual parameters of caller.
+However, in C, we can use pointers to get the effect of pass by reference.
+
+Moreover, if the return type of the function is void, we still can use return statement in the body of function definition by not specifying any constant, variable, etc. with it, by only mentioning the ‘return;’ statement which would symbolise the termination of the function
+
+5)If in a C program, a function is called before its declaration then the C compiler automatically assumes the declaration of that function in the following way:
+int function name();
+And in that case if the return type of that function is different than INT ,compiler would show an error.
+
+What is the purpose of a function prototype?
+The Function prototype serves the following purposes –
+
+1) It tells the return type of the data that the function will return.
+2) It tells the number of arguments passed to the function.
+3) It tells the data types of the each of the passed arguments.
+4) Also it tells the order in which the arguments are passed to the function.
+
+Therefore essentially, function prototype specifies the input/output interlace to the function i.e. what to give to the function and what to expect from the function.
+
+Functions that are executed before and after main() in C .
+
+So some startup code can be executed before main() starts, and some cleanup code can be executed after main() ends. For example, in the following program, myStartupFun() is called before main() and myCleanupFun() is called after main().
+
+#include<stdio.h>
+
+/* Apply the constructor attribute to myStartupFun() so that it  is executed before main() */
+void myStartupFun (void) __attribute__ ((constructor));
+
+/* Apply the destructor attribute to myCleanupFun() so that it  is executed after main() */
+void myCleanupFun (void) __attribute__ ((destructor));
+
+/* implementation of myStartupFun */
+void myStartupFun (void)
+{
+    printf ("startup code before main()\n");
+}
+/* implementation of myCleanupFun */
+void myCleanupFun (void)
+{
+    printf ("cleanup code after main()\n");
+}
+int main (void)
+{
+    printf ("hello\n");
+    return 0;
+}
+Output:
+startup code before main()
+hello
+cleanup code after main()
+
+In C, if we do not specify a return type, compiler assumes an implicit return type as int. However, C99 standard doesn’t allow return type to be omitted even if return type is int. This was allowed in older C standard C89.
+
+ functions are global by default. The “static” keyword before a function name makes it static. For example, below function fun() is static.
+static int fun(void)
+{
+  printf("I am a static function ");
+}
+Unlike global functions in C, access to static functions is restricted to the file where they are declared. Therefore, when we want to restrict access to functions, we make them static. Another reason for making functions static can be reuse of the same function name in other files.
+
+Nested function is not supported by C because we cannot define a function within another function in C. We can declare a function inside a function, but it’s not a nested function.
+Because nested functions definitions can not access local variables of the surrounding blocks, they can access only global variables of the containing module. This is done so that lookup of global variables doesn’t have to go through the directory. As in C, there are two nested scopes: local and global (and beyond this, built-ins). Therefore, nested functions have only a limited use. If we try to approach nested function in C, then we will get compile time error.
+
+
+// C program to illustrate the
+// concept of Nested function.
+#include <stdio.h>
+int main(void)
+{
+    printf("Main");
+    int fun()
+    {
+        printf("fun");
+        // defining view() function inside fun() function.
+        int view()
+        {
+            printf("view");
+        }
+        return 1;
+    }
+    view();
+}
+Output:
+Compile time error: undefined reference to `view'
+
+
+An extension of the GNU C Compiler allows the declarations of nested functions. The declarations of nested functions under GCC’s extension need to be prefix/start with the auto keyword.
+
+// C program of nested function
+// with the help of gcc extension
+#include <stdio.h>
+int main(void)
+{
+    auto int view(); // declare function with auto keyword
+    view(); // calling function
+    printf("Main\n");
+    int view()
+    {
+        printf("View\n");
+        return 1;
+    }
+    printf("GEEKS");
+    return 0;
+}
+Output:
+view
+Main
+GEEKS
+
+
+Executing main() in C/C++ – behind the scene
+How to write a C program to print “Hello world” without main() function?
+At first, it seems impractical to execute a program without a main() function because the main() function is the entry point of any program.
+
+Let us first understand what happens under the hood while executing a C program in Linux system, how main() is called and how to execute a program without main().
+
+Following setup is considered for the demonstration.
+
+Ubuntu 16.4 LTS operating system
+GCC 5.4.0 compiler
+objdump utility
+From C/C++ programming perspective, the program entry point is main() function. From the perspective of program execution, however, it is not.
+
+Prior to the point when the execution flow reaches to the main(), calls to few other functions are made, which setup arguments, prepare environment variables for program execution etc.
+
+The executable file created after compiling a C source code is a Executable and Linkable Format (ELF) file.
+Every ELF file have a ELF header where there is a e_entry field which contains the program memory address from which the execution of executable will start. This memory address point to the _start() function.
+After loading the program, loader looks for the e_entry field from the ELF file header. Executable and Linkable Format (ELF) is a common standard file format used in UNIX system for executable files, object code, shared libraries, and core dumps.
+
+Let’s see this using an example. I’m creating a example.c file to demonstrate this.
+
+int main()
+{
+   return(0);
+}
+Now compiling this using following commands
+
+gcc -o example example.c
+Now an example executable is created, let us examine this using objdump utility
+
+objdump -f example
+This outputs following critical information of executable on my machine. Have a look at start address below, this is the address pointing to _start() function.
+
+example:     file format elf64-x86-64
+architecture: i386:x86-64, flags 0x00000112:
+EXEC_P, HAS_SYMS, D_PAGED
+start address 0x00000000004003e0
+We can cross check this address by deassembling the executable, the output is long so I’m just pasting the output which shows where this address 0x00000000004003e0 is pointing
+
+objdump --disassemble  example
+Output :
+
+00000000004003e0 <_start>:
+  4003e0:       31 ed                   xor    %ebp,%ebp
+  4003e2:       49 89 d1                mov    %rdx,%r9
+  4003e5:       5e                      pop    %rsi
+  4003e6:       48 89 e2                mov    %rsp,%rdx
+  4003e9:       48 83 e4 f0             and    $0xfffffffffffffff0,%rsp
+  4003ed:       50                      push   %rax
+  4003ee:       54                      push   %rsp
+  4003ef:       49 c7 c0 60 05 40 00    mov    $0x400560,%r8
+  4003f6:       48 c7 c1 f0 04 40 00    mov    $0x4004f0,%rcx
+  4003fd:       48 c7 c7 d6 04 40 00    mov    $0x4004d6,%rdi
+  400404:       e8 b7 ff ff ff          callq  4003c0
+  400409:       f4                      hlt
+  40040a:       66 0f 1f 44 00 00       nopw   0x0(%rax,%rax,1)
+a.out-i386-linux
+ (header little endian, data little endian)
+  i386
+pei-i386
+ (header little endian, data little endian)
+As we can clearly see this is pointing to the _start() function.
+
+The role of _start() function
+The _start() function prepare the input arguments for another function _libc_start_main() which will be called next. This is prototype of _libc_start_main() function. Here we can see the arguments which were prepared by _start() function.
+
+int __libc_start_main(int (*main) (int, char * *, char * *), /* address of main function*/
+int argc, /* number of command line args*/
+char ** ubp_av, /* command line arg array*/
+void (*init) (void), /* address of init function*/
+void (*fini) (void), /* address of fini function*/
+void (*rtld_fini) (void), /* address of dynamic linker fini function */
+void (* stack_end) /* end of the stack address*/
+);
+The role of _libc_start_main() function
+The role of _libs_start_main() function is following –
+
+Preparing environment variables for program execution
+Calls _init() function which performs initialization before the main() function start.
+Register _fini() and _rtld_fini() functions to perform cleanup after program terminates
+After all the prerequisite actions has been completed, _libc_start_main() calls the main() function.
+Writing program without main()
+Now we know how the call to the main() is made.To make it clear, main() is nothing but a agreed term for startup code. We can have any name for startup code it doesn’t necessarily have to be “main”. As _start() function by default calls main(), we have to change it if we want to execute our custom startup code. We can override the _start() function to make it call our custom startup code not main(). Let’s have an example, save it as nomain.c –
+
+#include<stdio.h>
+#include<stdlib.h>
+void _start()
+{
+    int x = my_fun(); //calling custom main function
+    exit(x);
+}
+
+int my_fun() // our custom main function
+{
+    printf("Hello world!\n");
+    return 0;
+}
+Now we have to force compiler to not use it’s own implementation of _start().In GCC we can do this using -nostartfiles
+
+gcc -nostartfiles -o nomain nomain.c
+Execute the executable nomain
+
+./nomain
+Output:
+Hello world!
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Dangling pointer
+A pointer pointing to a memory location that has been deleted (or freed) is called dangling pointer.
+ There are three different ways where Pointer acts as dangling pointer
+1)Deallocating(free) a memory pointed by ptr causes dangling pointer
+2)Function Call
+ The pointer pointing to local variable becomes dangling when local variable is not static.
+3) Variable goes out of scope
+void main()
+{
+   int *ptr;
+   .....
+   .....
+   {
+       int ch;
+       ptr = &ch;
+   }
+   .....
+   // Here ptr is dangling pointer
+}
+
+
+How to declare a pointer to a function?
+int foo(int);
+Here foo is a function that returns int and takes one argument of int type. So as a logical guy will think, by putting a * operator between int and foo(int) should create a pointer to a function i.e.
+
+int * foo(int);
+But Oops..C operator precedence also plays role here ..so in this case, operator () will take priority over operator *. And the above declaration will mean – a function foo with one argument of int type and return value of int * i.e. integer pointer. So it did something that we didn’t want to do. 🙁
+
+So as a next logical step, we have to bind operator * with foo somehow. And for this, we would change the default precedence of C operators using () operator.
+int (*foo)(int);
+
+    // fun_ptr is a pointer to function fun()
+    void (*fun_ptr)(int) = &fun;
+
+    /* The above line is equivalent of following two
+       void (*fun_ptr)(int);
+       fun_ptr = &fun;
+    */
+    // Invoking fun() using fun_ptr
+    (*fun_ptr)(10);
+
+Following are some interesting facts about function pointers.
+1) Unlike normal pointers, a function pointer points to code, not data. Typically a function pointer stores the start of executable code.
+
+2) Unlike normal pointers, we do not allocate de-allocate memory using function pointers.
+
+3) A function’s name can also be used to get functions’ address.we have removed address operator ‘&’ in assignment. We have also changed function call by removing *, the program still works.
+        void (*fun_ptr)(int) = fun; // & removed
+        fun_ptr(10); // * removed
+
+4) Like normal pointers, we can have an array of function pointers
+
+
+Level-N pointer can only be used to point level-(N-1) pointer. Except for Level-1 pointer. The level-1 pointer will always point to the variable.
+
+
+What are near, far and huge pointers?
+
+These are some old concepts used in 16 bit intel architectures in the days of MS DOS, not much useful anymore.
+Near pointer is used to store 16 bit addresses means within current segment on a 16 bit machine. The limitation is that we can only access 64kb of data at a time.
+A far pointer is typically 32 bit that can access memory outside current segment.  To use this, compiler allocates a segment register to store segment address, then another register to store offset within current segment.
+Like far pointer, huge pointer is also typically 32 bit and can access outside segment. In case of far pointers, a segment is fixed. In far pointer, the segment part cannot be modified, but in Huge it can be
+
+
+NULL Pointer
+“An integer constant expression with the value 0, or such an expression cast to type void *, is called a null pointer constant. If a null pointer constant is converted to a pointer type, the resulting pointer, called a null pointer, is guaranteed to compare unequal to a pointer to any object or function.”
+
+NULL Pointer is a pointer which is pointing to nothing. In case, if we don’t have address to be assigned to a pointer, then we can simply use NULL.
+
+
+Important Points
+NULL vs Uninitialized pointer – An uninitialized pointer stores an undefined value. A null pointer stores a defined value, but one that is defined by the environment to not be a valid address for any member or object.
+NULL vs Void Pointer – Null pointer is a value, while void pointer is a type
+
+
+a) To initialize a pointer variable when that pointer variable isn’t assigned any valid memory address yet.
+b) To check for a null pointer before accessing any pointer variable.
+   By doing so, we can perform error handling in pointer related code e.g. dereference pointer variable only if it’s not NULL.
+c) To pass a null pointer to a function argument when we don’t want to pass any valid memory address.
+
+Coming to our discussion, NULL macro is defined as ((void *)0) in header files of most of the C compiler implementations. But C standard is saying that 0 is also a null pointer constant. It means that the following is also perfectly legal as per standard.
+
+int * ptr = 0;
+
+Please note that 0 in the above C statement is used in pointer-context and it’s different from 0 as integer. This is one of the reasons why the usage of NULL is preferred because it makes it explicit in code that programmer is using null pointer, not integer 0
+
+You can try few other things in above program such as printf(“‘%c“,NULL) or printf(“%s”,NULL) and even printf(“%f”,NULL). The outputs of these are going to be different depending on the platform used but it’d be interesting especially usage of %f with NULL!
+
+Can we use sizeof() operator on NULL in C? Well, usage of sizeof(NULL) is allowed but the exact size would depend on platform.
+
+Since NULL is defined as ((void*)0), we can think of NULL as a special pointer and its size would be equal to any pointer. If the pointer size of a platform is 4 bytes, the output of the above program would be 4. But if pointer size on a platform is 8 bytes, the output of the above program would be 8.
+
+If an argument to a function has an invalid value (such as a value outside the domain of the function, or a pointer outside the address space of the program, or a null pointer, or a pointer to non-modifiable storage when the corresponding parameter is not const-qualified) or a type (after promotion) not expected by a function with variable number of arguments, the behavior is undefined.
+
+Opaque pointer is a pointer which points to a data structure whose contents are not exposed at the time of its definition.
+Following pointer is opaque. One can’t know the data contained in STest structure by looking at the definition.
+struct STest* pSTest;
+It is safe to assign NULL to an opaque pointer.
+
+Pointer Expressions and Pointer Arithmetic
+A limited set of arithmetic operations can be performed on pointers. A pointer may be:
+
+incremented ( ++ )
+decremented ( — )
+an integer may be added to a pointer ( + or += )
+an integer may be subtracted from a pointer ( – or -= )
+
+
+Pointer arithmetic is meaningless unless performed on an array.
+Note : Pointers contain addresses. Adding two addresses makes no sense, because there is no idea what it would point to. Subtracting two addresses lets you compute the offset between these two addresses
+
+Pointers store address of variables or a memory location.
+
+we use the unary operator & (ampersand) that returns the address of that variable.
+ When a pointer variable is declared in C/C++, there must a * before its name.
+To access the value stored in the address we use the unary operator (*) that returns the value of the variable located at the address specified by its operand.
+
+What is Memory Leak? How can we avoid?
+Memory leak occurs when programmers create a memory in heap and forget to delete it.
+Memory leaks are particularly serious issues for programs like daemons and servers which by definition never terminate
+To avoid memory leaks, memory allocated on heap should always be freed when no longer needed.
+
+
+There is possibility of potential error while dealing with pointer arithmetic. For example, dereferencing a generic pointer (void *) as shown below can cause misaligned exception,
+
+A note on malloc() returned pointer
+
+The pointer returned by malloc() is void *. It can be converted to any data type as per the need of programmer. The implementer of malloc() should return a pointer that is aligned to maximum size of primitive data types (those defined by compiler). It is usually aligned to 8 byte boundary on 32 bit machines.
+
+
+Array Name as Pointers
+An array name acts like a pointer constant. The value of this pointer constant is the address of the first element
+For example, if we have an array named val then val and &val[0] can be used interchangeably.
+
+Array parameters treated as pointers because of efficiency. It is inefficient to copy the array data in terms of both memory and time; and most of the times, when we pass an array our intention is to just tell the array we interested in, not to create a copy of the array.
+
+Now if you replace arr[0] with 0[arr], the output would be same.
+Because compiler converts the array operation in pointers before accessing the array elements.
+
+e.g. arr[0] would be *(arr + 0) and therefore 0[arr] would be *(0 + arr) and you know that both *(arr + 0) and *(0 + arr) are same.
+
+Pointer vs Array in C
+
+Most of the time, pointer and array accesses can be treated as acting the same, the major exceptions being:
+
+1) the sizeof operator
+o sizeof(array) returns the amount of memory used by all elements in array
+o sizeof(pointer) only returns the amount of memory used by the pointer variable itself
+
+2) the & operator
+o &array is an alias for &array[0] and returns the address of the first element in array
+o &pointer returns the address of pointer
+
+3) a string literal initialization of a character array
+o char array[] = “abc” sets the first four elements in array to ‘a’, ‘b’, ‘c’, and ‘\0’
+o char *pointer = “abc” sets pointer to the address of the “abc” string (which may be stored in read-only memory and thus unchangeable)
+
+4) Pointer variable can be assigned a value whereas array variable cannot be.
+
+int a[10];
+int *p;
+p=a; /*legal*/
+a=p; /*illegal*/
+5) Arithmetic on pointer variable is allowed.
+
+p++; /*Legal*/
+a++; /*illegal*/
+
+
+int const* is pointer to const int
+int *const is const pointer to int
+int const* const is const pointer to const int
+Using this rule, even complex declarations can be decoded like,
+
+int ** const is a const pointer to pointer to an int.
+int * const * is a pointer to const pointer to an int.
+int const ** is a pointer to a pointer to a const int.
+int * const * const is a const pointer to a const pointer to an int.
+
+The qualifier const can be applied to the declaration of any variable to specify that its value will not be changed. const keyword applies to whatever is immediately to its left. If there is nothing to its left, it applies to whatever is immediately to its right.
+
+NOTE: There is no difference between const char *p and char const *p as both are pointer to a const char and position of ‘*'(asterik) is also same.
+
+char *const ptr : This is a constant pointer to non-constant character. You cannot change the pointer p, but can change the value pointed by ptr.
+
+char const * const ptr is same as const char *const ptr.
+
+In general, nums[i][j] is equivalent to *(*(nums+i)+j)
+
+
+
+restrict keyword in C
+In the C programming language (after 99 standard), a new keyword is introduced known as restrict.
+
+restrict keyword is mainly used in pointer declarations as a type qualifier for pointers.
+It doesn’t add any new functionality. It is only a way for programmer to inform about an optimizations that compiler can make.
+When we use restrict with a pointer ptr, it tells the compiler that ptr is the only way to access the object pointed by it and compiler doesn’t need to add any additional checks.
+
+If a programmer uses restrict keyword and violate the above condition, result is undefined behavior.
+restrict is not supported by C++. It is a C only keyword.
+
+
+pointers:To pass arguments by reference. Passing by reference serves two purposes
+(i) To modify variable of function in other. Example to swap two variables;
+(ii) For efficiency purpose. Example passing large structure without reference would create a copy of the structure (hence wastage of space).
+
+Dynamic memory allocation : We can use pointers to dynamically allocate memory. The advantage of dynamically allocated memory is, it is not deleted until we explicitly delete it.
+
+To implement data structures.
+Example linked list, tree, etc. We cannot use C++ references to implement these data structures because references are fixed to a location (For example, we can not traverse a linked list using references)
+
+To do system level programming where memory addresses are useful. For example shared memory used by multiple threads. For more examples, see IPC through shared memory, Socket Programming in C/C++, etc
+
+Features of Pointers:
+
+Pointers save memory space.
+Execution time with pointers is faster because data are manipulated with the address, that is, direct access to
+memory location.
+Memory is accessed efficiently with the pointers. The pointer assigns and releases the memory as well. Hence it can be said the Memory of pointers is dynamically allocated.
+Pointers are used with data structures. They are useful for representing two-dimensional and multi-dimensional
+arrays.
+An array, of any type can be accessed with the help of pointers, without considering its subscript range.
+Pointers are used for file handling.
+Pointers are used to allocate memory dynamically.
+
+Void pointer is a specific pointer type – void * – a pointer that points to some data location in storage, which doesn’t have any specific type. Void refers to the type. Basically the type of data that it points to is can be any. If we assign address of char data type to void pointer it will become char Pointer, if int data type then int pointer and so on. Any pointer type is convertible to a void pointer hence it can point to any value.
+
+void pointers cannot be dereferenced. 
+Compiler Error: 'void*' is not a pointer-to-object type
+
+It can however be done using typecasting the void pointer
+Pointer arithmetic is not possible on pointers of void due to lack of concrete value and thus size.
+
+Advantages of void pointers:
+1) malloc() and calloc() return void * type and this allows these functions to be used to allocate memory of any data type (just because of void *)
+we must explicitly typecast return value of malloc
+
+2) void pointers in C are used to implement generic functions in C.
+
+
+What are Wild Pointers? How can we avoid?
+Uninitialized pointers are known as wild pointers because they point to some arbitrary memory location and may cause a program to crash or behave badly.
+
+a pointer p points to a known variable then it’s not a wild pointer, p is a wild pointer till this points to variable.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Enumeration (or enum) is a user defined data type in C. It is mainly used to assign names to integral constants, the names make a program easy to read and maintain.
+
+The keyword ‘enum’ is used to declare new enumeration types.
+enum flag{constant1, constant2, constant3, ....... };
+
+
+Variables of type enum can also be defined.
+enum week{Mon, Tue, Wed};
+enum week day;
+// Or
+enum week{Mon, Tue, Wed}day;
+
+
+#define statements are handled by the pre-processor before the compiler gets to see the code whereas enums are part of the C language itself and have the following advantages. They may have type and the compiler can type-check them. Since they are available to the compiler, symbol information on them can be passed through to the debugger, making debugging easier
+
+Constants allow you to specify a datatype, which is (usually) an advantage. Macros are much more flexible, and therefore can get you into much more trouble if you're not careful.
+
+#include<stdio.h>
+enum year{Jan, Feb, Mar, Apr, May, Jun, Jul,
+          Aug, Sep, Oct, Nov, Dec};
+int main()
+{
+   int i;
+   for (i=Jan; i<=Dec; i++)
+      printf("%d ", i);
+
+   return 0;
+}
+Output:
+0 1 2 3 4 5 6 7 8 9 10 11
+
+1)Two enum names can have same value. For example, in the following C program both ‘Failed’ and ‘Freezed’ have same value 0.
+
+#include <stdio.h>
+enum State {Working = 1, Failed = 0, Freezed = 0};
+int main()
+{
+   printf("%d, %d, %d", Working, Failed, Freezed);
+   return 0;
+}
+Output:
+1, 0, 0
+
+2. If we do not explicitly assign values to enum names, the compiler by default assigns values starting from 0
+
+
+3. We can assign values to some name in any order. All unassigned names get value as value of previous name plus one.
+
+
+#include <stdio.h>
+enum day {sunday = 1, monday, tuesday = 5,
+          wednesday, thursday = 10, friday, saturday};
+int main()
+{
+    printf("%d %d %d %d %d %d %d", sunday, monday, tuesday,
+            wednesday, thursday, friday, saturday);
+    return 0;
+}
+Output:
+1 2 5 6 10 11 12
+
+
+4. The value assigned to enum names must be some integeral constant, i.e., the value must be in range from minimum possible integer value to maximum possible integer value.
+
+5. All enum constants must be unique in their scope. For example, the following program fails in compilation.
+
+enum state  {working, failed};
+enum result {failed, passed};
+int main()  { return 0; }
+
+Output:
+Compile Error: 'failed' has a previous declaration as 'state failed'
+
+Program 1:
+#include <stdio.h>
+enum day {sunday = 1, tuesday, wednesday, thursday, friday, saturday};
+int main()
+{
+    enum day d = thursday;
+    printf("The day number stored in d is %d", d);
+    return 0;
+}
+output:: The day number stored in d is 4
+
+Program 2:
+#include <stdio.h>
+enum State {WORKING = 0, FAILED, FREEZED};
+enum State currState = 2;
+enum State FindState() {
+    return currState;
+}
+int main() {
+   (FindState() == WORKING)? printf("WORKING"): printf("NOT WORKING");
+   return 0;
+}
+output:: NOT WORKING
+
+
+Enum vs Macro
+We can also use macros to define names constants.
+There are multiple advantages of using enum over macro when many related named constants have integral values.
+a) Enums follow scope rules.
+b) Enum variables are automatically assigned values.
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+union is a user defined data type. In union, all members share the same memory location.
+How is the size of union decided by compiler?
+Size of a union is taken according the size of largest member in union.
+
+union test3 {
+    int arr[10];
+    char y;
+} Test3;
+
+sizeof(test3) = 40
+
+#include <stdio.h> 
+union test { 
+    int x;
+    char y;
+};
+
+
+int main()
+{
+    union test p1;
+    p1.x = 65;
+
+    // p2 is a pointer to union p1
+    union test* p2 = &p1;
+
+    // Accessing union members using pointer
+    printf("%d %c", p2->x, p2->y);
+    return 0;
+}
+Output:
+65 A
+
+
+Similarities between Structure and Union
+
+Both are user-defined data types used to store data of different types as a single unit.
+Their members can be objects of any type, including other structures and unions or arrays. A member can also consist of a bit field.
+Both structures and unions support only assignment = and sizeof operators. The two structures or unions in the assignment must have the same members and member types.
+
+A structure or a union can be passed by value to functions and returned by value by functions. The argument must have the same type as the function parameter. A structure or union is passed by value just like a scalar variable as a corresponding parameter.
+‘.’ operator is used for accessing members.
+
+differences
+1)keyword:: struct  || union
+
+2)size:: greater or eqaul to sum of structure members || largest member in union
+
+3)compiler::  when a variable is associated with structure, compiler considers all memebers and allocates memory for each member || when a variable is associated with union, compiler allocates memory by considering size of the largest element
+
+4)altering value:: one member value has no effect on other member value || alteriing value of any member will have values altered for all members in union
+
+5)accessing
+4)initializing
+
+
+What are applications of union?
+Unions can be useful in many situations where we want to use the same memory for two or more members. For example, suppose we want to implement a binary tree data structure where each leaf node has a double data value, while each internal node has pointers to two children, but no data. If we declare this as:
+
+struct NODE {
+    struct NODE* left;
+    struct NODE* right;
+    double data;
+};
+then every node requires 16 bytes, with half the bytes wasted for each type of node. On the other hand, if we declare a node as following, then we can save space.
+
+struct NODE {
+    bool is_leaf;
+    union {
+        struct
+        {
+            struct NODE* left;
+            struct NODE* right;
+        } internal;
+        double data;
+    } info;
+};
+
+
+Anonymous Union and Structure in C
+In C11 standard of C, anonymous Unions and structures were added.
+
+Anonymous unions/structures are also known as unnamed unions/structures as they don’t have names. Since there is no names, direct objects(or variables) of them are not created and we use them in nested structure or unions.
+
+Definition is just like that of a normal union just without a name or tag. For example,
+
+// Anonymous union example
+union
+{
+   char alpha;
+   int num;
+};
+// Anonymous structure example
+struct
+{
+   char alpha;
+   int num;
+};
+Since there is no variable and no name, we can directly access members. This accessibility works only inside the scope where the anonymous union is defined.
+
+
+
+Following is a complete working example of anonymous union.
+
+// C Program to demonstrate working of anonymous union
+#include<stdio.h>
+struct Scope
+{
+    // Anonymous union
+    union
+    {
+        char alpha;
+        int num;
+    };
+};
+
+int main()
+{
+    struct Scope x;
+    x.num = 65;
+
+    // Note that members of union are accessed directly
+    printf("x.alpha = %c, x.num = %d", x.alpha, x.num);
+
+    return 0;
+}
+Output:
+x.alpha = A, x.num = 65
+
+
+// C Program to demonstrate working of anonymous struct
+#include<stdio.h>
+struct Scope
+{
+    // Anonymous structure
+    struct
+    {
+        char alpha;
+        int num;
+    };
+};
+
+int main()
+{
+    struct Scope x;
+    x.num = 65;
+    x.alpha = 'B';
+
+    // Note that members of structure are accessed directly
+    printf("x.alpha = %c, x.num = %d", x.alpha, x.num);
+
+    return 0;
+}
+Output:
+x.alpha = B, x.num = 65
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+Bit Fields in C
+In C, we can specify size (in bits) of structure and union members. The idea is to use memory efficiently when we know that the value of a field or group of fields will never exceed a limit or is withing a small range.
+
+must be aware of signed number while using bit fields...
+therefore try to use the unsigned number in the bit feilds
+
+
+Following are some interesting facts about bit fields in C.
+4) Use bit fields in C to figure out a way whether a machine is little-endian or big-endian.
+1) A special unnamed bit field of size 0 is used to force alignment on next boundary. For example consider the following program.
+
+#include <stdio.h>
+// A structure without forced alignment
+struct test1 {
+        unsigned int x : 5;
+        unsigned int y : 8;
+};
+// A structure with forced alignment
+struct test2 {
+        unsigned int x : 5;
+        unsigned int : 0;
+        unsigned int y : 8;
+};
+int main()
+{
+        printf("Size of test1 is %lu bytes\n",
+                sizeof(struct test1));
+        printf("Size of test2 is %lu bytes\n",
+                sizeof(struct test2));
+        return 0;
+}
+Output:
+Size of test1 is 4 bytes
+Size of test2 is 8 bytes
+
+2) We cannot have pointers to bit field members as they may not start at a byte boundary.
+3) It is implementation defined to assign an out-of-range value to a bit field member.
+#include <stdio.h>
+struct test {
+    unsigned int x : 2;
+    unsigned int y : 2;
+    unsigned int z : 2;
+};
+int main()
+{
+    struct test t;
+    t.x = 5;
+    printf("%d", t.x);
+    return 0;
+}
+Output:
+main.c:10:11: warning: large integer implicitly truncated to unsigned type [-Woverflow]
+1
+//Implementation-Dependent
+//if t.x=4; then output=0; so only data is  stored in two bits (last two bits of the binary representation of integer value)
+
+5) Array of bit fields is not allowed. For example, the below program fails in the compilation.
+
+struct test {
+    unsigned int x[10] : 5;
+};
+int main()
+{
+}
+Output:
+prog.c:3:1: error: bit-field 'x' has invalid type
+ unsigned int x[10]: 5;
+ ^
+
+
+
+
+main.c:4:15: error: width of ‘y’ exceeds its type
+  unsigned int y : 33;
+               ^
+main.c:5:9: error: bit-field ‘y’ has invalid type
+  double y : 5 ;
+         ^
+main.c:5:8: error: bit-field ‘y’ has invalid type
+  float y : 5 ;
+        ^
+
+
+
+#include <stdio.h>
+struct test {
+        unsigned int x;
+        long long int y : 5 ;
+        unsigned int z;
+};
+int main()
+{
+        struct test t;
+        unsigned int* ptr1 = &t.x;
+        unsigned int* ptr2 = &t.z;
+        printf("%ld", ptr2 - ptr1);
+        return 0;
+}
+
+2
+
+
+#include <stdio.h>
+struct test {
+        unsigned int x;
+        int y  ;
+         int h  ;
+        unsigned int z;
+};
+int main()
+{
+        struct test t;
+        unsigned int* ptr1 = &t.x;
+        unsigned int* ptr2 = &t.z;
+        printf("%ld", ptr2 - ptr1);
+        return 0;
+}
+3
+
+
+
+#include <stdio.h>
+struct test {
+        unsigned int x;
+        int y : 1 ;
+         int h  :1;
+        unsigned int z;
+};
+int main()
+{
+        struct test t;
+        unsigned int* ptr1 = &t.x;
+        unsigned int* ptr2 = &t.z;
+        printf("%ld", ptr2 - ptr1);
+        return 0;
+}
+2
+
+
+#include <stdio.h>
+struct test {
+        unsigned int x;
+        int y : 30 ;
+         int h  :2;
+        unsigned int z;
+};
+int main()
+{
+        struct test t;
+        unsigned int* ptr1 = &t.x;
+        unsigned int* ptr2 = &t.z;
+        printf("%ld", ptr2 - ptr1);
+        return 0;
+}
+2
+
+
+#include <stdio.h>
+struct test {
+        unsigned int x;
+        int y : 30 ;
+         int h  :3;
+        unsigned int z;
+};
+int main()
+{
+        struct test t;
+        unsigned int* ptr1 = &t.x;
+        unsigned int* ptr2 = &t.z;
+        printf("%ld", ptr2 - ptr1);
+        return 0;
+}
+3
+
+#include<stdio.h>
+union test {
+        unsigned int x : 3;
+        unsigned int y : 3;
+        int z;
+};
+
+int main()
+{
+        union test t;
+        t.x = 5;
+        t.y = 4;
+        t.z = 1;
+        printf("t.x = %d, t.y = %d, t.z = %d",
+                t.x, t.y, t.z);
+        return 0;
+}
+t.x = 1, t.y = 1, t.z = 1
+
+--------------------------------------------------------------------------
+#include<stdio.h>
+union test {
+        unsigned int x : 1;
+        unsigned int y : 1;
+        int z;
+};
+
+int main()
+{
+        union test t;
+        t.z = 3;
+        printf("t.x = %d, t.y = %d, t.z = %d",
+                t.x, t.y, t.z);
+        return 0;
+}
+t.x = 1, t.y = 1, t.z = 3
+
+--------------------------------------------------------------------------
+#include<stdio.h>
+union test {
+        unsigned int x : 1;
+        unsigned int y : 1;
+        int z;
+};
+
+int main()
+{
+        union test t;
+        t.z = 4;
+        printf("t.x = %d, t.y = %d, t.z = %d",
+                t.x, t.y, t.z);
+        return 0;
+}
+t.x = 0, t.y = 0, t.z = 4
+
+--------------------------------------------------------------------------
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+How to initialize structure members?
+Structure members cannot be initialized with declaration. For example the following C program fails in compilation.
+
+struct Point
+{
+   int x = 0;  // COMPILER ERROR:  cannot initialize members here
+   int y = 0;  // COMPILER ERROR:  cannot initialize members here
+};
+
+The reason for above error is simple, when a datatype is declared, no memory is allocated for it. Memory is allocated only when variables are created.
+
+Structure members can be initialized using curly braces ‘{}’. For example, following is a valid initialization.
+struct Point
+{
+   int x, y;
+};
+int main()
+{
+   struct Point p1 = {0, 1};
+}
+
+
+What is designated Initialization?
+Designated Initialization allows structure members to be initialized in any order. This feature has been added in C99 standard.
+struct Point
+{
+   int x, y, z;
+};
+int main()
+{
+   // Examples of initialization using designated initialization
+   struct Point p1 = {.y = 0, .z = 1, .x = 2};
+   struct Point p2 = {.x = 20};
+   printf ("x = %d, y = %d, z = %d\n", p1.x, p1.y, p1.z);
+   printf ("x = %d", p2.x);
+   return 0;
+}
+Output:
+x = 2, y = 0, z = 1
+x = 20
+
+
+
+   // Create an array of structures
+   struct Point arr[10];
+   // Access array members
+   arr[0].x = 10;
+   arr[0].y = 20;
+
+
+What is a structure pointer?
+Like primitive types, we can have pointer to a structure. If we have a pointer to structure, members are accessed using arrow ( -> ) operator.
+
+
+struct employee
+{
+    int     emp_id;
+    int     name_len;
+    char    name[0];
+};
+4 + 4 + 0 = 8 bytes.
+
+And what about size of “name[0]”. In gcc, when we create an array of zero length, it is considered as array of incomplete type that’s why gcc reports its size as “0” bytes. This technique is known as “Stuct Hack”. When we create array of zero length inside structure, it must be (and only) last member of structure. Shortly we will see how to use it.
+“Struct Hack” technique is used to create variable length member in a structure. In the above structure, string length of “name” is not fixed, so we can use “name” as variable length array.
+
+
+Let us see below memory allocation.
+
+struct employee *e = malloc(sizeof(*e) + sizeof(char) * 128);
+is equivalent to
+struct employee
+{
+    int     emp_id;
+    int     name_len;
+    char    name[128]; /* character array of size 128 */
+};
+And below memory allocation
+
+struct employee *e = malloc(sizeof(*e) + sizeof(char) * 1024);
+is equivalent to
+
+struct employee
+{
+    int     emp_id;
+    int     name_len;
+    char    name[1024]; /* character array of size 1024 */
+};
+Note: since name is character array, in malloc instead of “sizeof(char) * 128”, we can use “128” directly. sizeof is used to avoid confusion.
+
+Now we can use “name” same as pointer. e.g.
+
+e->emp_id       = 100;
+e->name_len     = strlen("Geeks For Geeks");
+strncpy(e->name, "Geeks For Geeks", e->name_len);
+
+When we allocate memory as given above, compiler will allocate memory to store “emp_id” and “name_len” plus contiguous memory to store “name”. When we use this technique, gcc guaranties that, “name” will get contiguous memory.
+
+
+Obviously there are other ways to solve problem, one is we can use character pointer. But there is no guarantee that character pointer will get contiguous memory, and we can take advantage of this contiguous memory. For example, by using this technique, we can allocate and deallocate memory by using single malloc and free call (because memory is contagious). Other advantage of this is, suppose if we want to write data, we can write whole data by using single “write()” call. e.g.
+
+write(fd, e, sizeof(*e) + name_len); /* write emp_id + name_len + name */
+If we use character pointer, then we need 2 write calls to write data. e.g.
+
+write(fd, e, sizeof(*e));               /* write emp_id + name_len */
+write(fd, e->name, e->name_len);        /* write name */
+Note: In C99, there is feature called “flexible array members”, which works same as “Struct Hack”
+
+
+Flexible Array Members in a structure in C
+Flexible Array Member(FAM) is a feature introduced in the C99 standard of the C programming language.
+
+For the structures in C programming language from C99 standard onwards, we can declare an array without a dimension and whose size is flexible in nature.
+Such an array inside the structure should preferably be declared as the last member of structure and its size is variable(can be changed be at runtime).
+The structure must contain at least one more named member in addition to the flexible array member.
+What must be the size of the structure below?
+
+struct student
+{
+   int stud_id;
+   int name_len;
+   int struct_size;
+   char stud_name[];
+};
+The size of structure is = 4 + 4 + 4 + 0 = 12
+In the above code snippet, the size i.e length of array “stud_name” isn’t fixed and is an FAM.
+
+The memory allocation using flexible array members(as per C99 standards) for the above example can be done as:
+
+ struct student *s = malloc( sizeof(*s) + sizeof(char [strlen(stud_name)])  );
+Note: While using flexible array members in structures some convention regarding actual size of the member is defined.
+In the above example the convention is that the member “stud_name” has character size.
+
+For Example, Consider the following structure:
+
+Input : id = 15, name = "Kartik"
+Output : Student_id : 15
+         Stud_Name  : Kartik
+         Name_Length: 6
+         Allocated_Struct_size: 18
+Memory allocation of above structure:
+
+struct student *s =
+        malloc( sizeof(*s) + sizeof(char [strlen("Kartik")]));
+Its structure representation is equal to:
+
+struct student
+{
+   int stud_id;
+   int name_len;
+   int struct_size;
+   char stud_name[6]; //character array of length 6
+};
+
+
+
+Operations on struct variables in C
+In C, the only operation that can be applied to struct variables is assignment. Any other operation (e.g. equality check) is not allowed on struct variables.
+
+
+struct Point p2 = p1; // works: contents of p1 are copied to p2
+if (p1 == p2) // compiler error: cannot do equality check for
+                                // whole structures
+
+Limitations of C Structures
+
+In C language, Structures provide a method for packing together data of different types. A Structure is a helpful tool to handle a group of logically related data items. However, C structures have some limitations.
+
+The C structure does not allow the struct data type to be treated like built-in data types:
+We cannot use operators like +,- etc. on Structure variables. For example, consider the following code:
+
+    struct number n1,n2,n3;
+    n1.x=4;
+    n2.x=3;
+    n3=n1+n2;
+    return 0;
+invalid operands to binary + (have 'struct number' and 'struct number')
+  n3=n1+n2;
+
+No Data Hiding: C Structures do not permit data hiding. Structure members can be accessed by any function, anywhere in the scope of the Structure.
+Functions inside Structure: C structures do not permit functions inside Structure
+Static Members: C Structures cannot have static members inside their body
+Access Modifiers: C Programming language do not support access modifiers. So they cannot be used in C Structures.
+Construction creation in Structure: Structures in C cannot have constructor inside Structures.
+sizeof operator: This operator will generate 0 for an empty structure in C whereas 1 for an empty structure in C++.
+
+
+Compound Literals in C
+#include <stdio.h> 
+int main()
+{
+        // Compound literal (an array is created without
+        // any name and address of first element is assigned
+        // to p.  This is equivalent to:
+
+        // int arr[] = {2, 4, 6};
+        // int *p = arr;
+        int *p = (int []){2, 4, 6};
+
+        printf("%d %d %d", p[0], p[1], p[2]);
+
+        return 0;
+}
+
+Output:
+2 4 6
+
+Compound literals feature allows us to create unnamed objects with given list of initialized values. In the above example, an array is created without any name. Address of first element of array is assigned to pointer p.
+
+What is the use of it?
+Compound literals are mainly used with structures and are particularly useful when passing structures variables to functions. We can pass a structure object without defining it
+
+For example, consider the below code.
+
+
+#include <stdio.h> 
+struct Point
+{
+        int x, y;
+};
+void printPoint(struct Point p)
+{
+        printf("%d, %d", p.x, p.y);
+}
+int main()
+{
+        // Calling printPoint() without creating any temporary
+        // Point variable in main()
+        printPoint((struct Point){2, 3});
+
+        /*  Without compound literal, above statement would have
+            been written as
+            struct Point temp = {2, 3};
+            printPoint(temp);  */
+
+        return 0;
+}
+Output:
+2, 3
+
+
+
+Because of the alignment requirements of various data types, every member of structure should be naturally aligned. 
+
+When memory reading is efficient in reading 4 bytes at a time on 32 bit machine.
+it means when you can read a address of 32 bit(4byte) so make the alignment of 4byte.
+
+What is structure packing?
+Some times it is mandatory to avoid padded bytes among the members of structure.
+
+Most of the compilers provide non standard extensions to switch off the default padding like pragmas or command line switches. Consult the documentation of respective compiler for more details.
+
+Every data type in C/C++ will have alignment requirement (infact it is mandated by processor architecture, not by language). A processor will have processing word length as that of data bus size. On a 32 bit machine, the processing word size will be 4 bytesi.
+
+Historically memory is byte addressable and arranged sequentially. If the memory is arranged as single bank of one byte width, the processor needs to issue 4 memory read cycles to fetch an integer.
+
+It is more economical to read all 4 bytes of integer in one memory cycle. To take such advantage, the memory will be arranged as group of 4 banks as shown in the above figure
+
+The memory addressing still be sequential. If bank 0 occupies an address X, bank 1, bank 2 and bank 3 will be at (X + 1), (X + 2) and (X + 3) addresses. If an integer of 4 bytes is allocated on X address (X is multiple of 4), the processor needs only one memory cycle to read entire integer.
+
+Where as, if the integer is allocated at an address other than multiple of 4, it spans across two rows of the banks as shown in the below figure. Such an integer requires two memory read cycle to fetch the data.
+
+Similarly, the natural alignment of short int is 2 bytes. It means, a short int can be stored in bank 0 – bank 1 pair or bank 2 – bank 3 pair. A double requires 8 bytes, and occupies two rows in the memory banks. Any misalignment of double will force more than two read cycles to fetch double data.
+
+Note that a double variable will be allocated on 8 byte boundary on 32 bit machine and requires two memory read cycles. On a 64 bit machine, based on number of banks, double variable will be allocated on 8 byte boundary and requires only one memory read cycle.
+
+So, to avoid structure padding we can use pragma pack as well as an attribute.
+Below are the solutions to avoid structure padding:
+
+Program-1: Using pragma pack
+#include <stdio.h>
+// To force compiler to use 1 byte packaging
+#pragma pack(1)
+struct s {
+    int i;
+    char ch;
+    double d;
+};
+int main()
+{
+    struct s A;
+    printf("Size of A is: %ld", sizeof(A));
+}
+Output:
+Size of A is: 13
+
+
+
+Program-2: Using attribute
+// C program to avoid structure
+// padding using attribute
+#include <stdio.h>
+struct s {
+    int i;
+    char ch;
+    double d;
+} __attribute__((packed));
+// Attribute informing compiler to pack all members
+int main()
+{
+    struct s A;
+    printf("Size of A is: %ld", sizeof(A));
+}
+Output:
+Size of A is: 13
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+Note that, initialized  data segment is not read-only, since the values of the variables can be altered at run time.
+This segment can be further classified into initialized read-only area and initialized read-write area.
+For instance the global string defined by char s[] = “hello world” in C and a C statement like int debug=1 outside the main (i.e. global) would be stored in initialized read-write area. And a global C statement like const char* string = “hello world” makes the string literal “hello world” to be stored in initialized read-only area and the character pointer variable string in initialized read-write area.
+
+Uninitialized Data Segment:
+Uninitialized data segment, often called the “bss” segment, named after an ancient assembler operator that stood for “block started by symbol.” Data in this segment is initialized by the kernel to arithmetic 0 before the program starts executing
+
+uninitialized data starts at the end of the data segment and contains all global variables and static variables that are initialized to zero or do not have explicit initialization in source code.
+
+when the stack pointer met the heap pointer, free memory was exhausted. (With modern large address spaces and virtual memory techniques they may be placed almost anywhere, but they still typically grow opposite directions.)
+
+The heap area begins at the end of the BSS segment and grows to larger addresses from there.The Heap area is managed by malloc, realloc, and free, which may use the brk and sbrk system calls to adjust its size (note that the use of brk/sbrk and a single “heap area” is not required to fulfill the contract of malloc/realloc/free; they may also be implemented using mmap to reserve potentially non-contiguous regions of virtual memory into the process’ virtual address space). The Heap area is shared by all shared libraries and dynamically loaded modules in a process.
+
+u can try all and check sizes of segments by using 'size' command on an executable file
+
+
+
+
+Initialization: malloc() allocates memory block of given size (in bytes) and returns a pointer to the beginning of the block. malloc() doesn’t initialize the allocated memory. If we try to access the content of memory block(before initializing) then we’ll get segmentation fault error(or maybe garbage values).
+void* malloc(size_t size);
+
+calloc() allocates the memory and also initializes the allocated memory block to zero. If we try to access the content of these blocks then we’ll get 0.
+void* calloc(size_t num, size_t size);
+
+We can achieve same functionality as calloc() by using malloc() followed by memset(),
+ptr = malloc(size);
+memset(ptr, 0, size);
+
+
+Note: It would be better to use malloc over calloc, unless we want the zero-initialization because malloc is faster than calloc. So if we just want to copy some stuff or do something that doesn’t require filling of the blocks with zeros, then malloc would be a better choice.
+
+
+How to deallocate memory without using free() in C?
+Question: How to deallocate dynamically allocate memory without using “free()” function.
+Solution: Standard library function realloc() can be used to deallocate previously allocated memory.
+If “size” is zero, then call to realloc is equivalent to “free(ptr)”. And if “ptr” is NULL and size is non-zero then call to realloc is equivalent to “malloc(size)”.
+
+
+ptr = (cast-type*) malloc(byte-size)
+If space is insufficient, allocation fails and returns a NULL pointer.
+
+
+When memory allocation is done, the actual heap space allocated is one word larger than the requested memory. The extra word is used to store the size of the allocation and is later used by free( ) . this extra memory is before the address pointed by pointer.
+
+
+memcpy() is used to copy a block of memory from a location to another. It is declared in string.h
+// Copies "numBytes" bytes from address "from" to address "to"
+void * memcpy(void *to, const void *from, size_t numBytes);
+Notes:
+1) memcpy() doesn’t check for overflow or \0
+2) memcpy() leads to problems when source and destination addresses overlap.
+
+memmove() in C/C++
+memmove() is used to copy a block of memory from a location to another. It is declared in string.h
+// Copies "numBytes" bytes from address "from" to address "to"
+void * memmove(void *to, const void *from, size_t numBytes);
+Below is a sample C program to show working of memmove().
+
+How is it different from memcpy()?
+memcpy() simply copies data one by one from one location to another. On the other hand memmove() copies the data first to an intermediate buffer, then from buffer to destination.
+memcpy() leads to problems when strings overlap.
+
+
+The point to note is that realloc() should only be used for dynamically allocated memory. If the memory is not dynamically allocated, then behavior is undefined.
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Creation of a new file (fopen with attributes as “a” or “a+” or “w” or “w++”)
+Opening an existing file (fopen)
+Reading from file (fscanf or fgetc)
+Writing to a file (fprintf or fputs)
+Moving to a specific location in a file (fseek, rewind)
+Closing a file (fclose)
+
+“r” – Searches file. If the file is opened successfully fopen( ) loads it into memory and sets up a pointer which points to the first character in it. If the file cannot be opened fopen( ) returns NULL.
+“w” – Searches file. If the file exists, its contents are overwritten. If the file doesn’t exist, a new file is created. Returns NULL, if unable to open file.
+“a” – Searches file. If the file is opened successfully fopen( ) loads it into memory and sets up a pointer that points to the last character in it. If the file doesn’t exist, a new file is created. Returns NULL, if unable to open file.
+“r+” – Searches file. If is opened successfully fopen( ) loads it into memory and sets up a pointer which points to the first character in it. Returns NULL, if unable to open the file.
+“w+” – Searches file. If the file exists, its contents are overwritten. If the file doesn’t exist a new file is created. Returns NULL, if unable to open file.
+“a+” – Searches file. If the file is opened successfully fopen( ) loads it into memory and sets up a pointer which points to the last character in it. If the file doesn’t exist, a new file is created. Returns NULL, if unable to open file.
+As given above, if you want to perform operations on a binary file, then you have to append ‘b’ at the last. For example, instead of “w”, you have to use “wb”, instead of “a+” you have to use “a+b”. For performing the operations on the file, a special pointer called File pointer is used which is declared as
+
+As given above, if you want to perform operations on a binary file, then you have to append ‘b’ at the last. For example, instead of “w”, you have to use “wb”, instead of “a+” you have to use “a+b”. For performing the operations on the file, a special pointer called File pointer is used which is declared as
+
+FILE *filePointer;
+So, the file can be opened as
+filePointer = fopen(“fileName.txt”, “w”)
+The second parameter can be changed to contain all the attributes listed in the above table.
+
+Reading from a file –
+The file read operations can be performed using functions fscanf or fgets. Both the functions performed the same operations as that of scanf and gets but with an additional parameter, the file pointer. So, it depends on you if you want to read the file line by line or character by character.
+And the code snippet for reading a file is as:
+
+FILE * filePointer;
+filePointer = fopen(“fileName.txt”, “r”);
+fscanf(filePointer, "%s %s %s %d", str1, str2, str3, &year);
+
+Writing a file –:
+The file write operations can be perfomed by the functions fprintf and fputs with similarities to read operations. The snippet for writing to a file is as :
+
+FILE *filePointer ;
+filePointer = fopen(“fileName.txt”, “w”);
+fprintf(filePointer, "%s %s %s %d", "We", "are", "in", 2012);
+Closing a file –:
+After every successful fie operations, you must always close a file. For closing a file, you have to use fclose function. The snippet for closing a file is given as :
+FILE *filePointer ;
+filePointer= fopen(“fileName.txt”, “w”);
+
+
+EOF, getc() and feof() in C
+In C/C++, getc() returns EOF when end of file is reached. getc() also returns EOF when it fails. So, only comparing the value returned by getc() with EOF is not sufficient to check for actual end of file. To solve this problem, C provides feof() which returns non-zero value only if end of file has reached, otherwise it returns 0.
+
+
+#include <stdio.h>
+int main()
+{
+FILE *fp = fopen("test.txt", "r");
+int ch = getc(fp);
+while (ch != EOF)
+{
+        /* display contents of file on screen */
+        putchar(ch);
+        ch = getc(fp);
+}
+if (feof(fp))
+        printf("\n End of file reached.");
+else
+        printf("\n Something went wrong.");
+fclose(fp);
+getchar();
+return 0;
+}
+
+
+The latest C standard C11 provides a new mode “x” which is exclusive create-and-open mode. Mode “x” can be used with any “w” specifier, like “wx”, “wbx”. When x is used with w, fopen() returns NULL if file already exists or could not open.
+
+
+fseek() is used to move file pointer associated with a given file to a specific position.
+Syntax:
+int fseek(FILE *pointer, long int offset, int position)
+pointer: pointer to a FILE object that identifies the stream.
+offset: number of bytes to offset from position
+position: position from where offset is added.
+
+returns:
+zero if successful, or else it returns a non-zero value
+position defines the point with respect to which the file pointer needs to be moved. It has three values:
+SEEK_END : It denotes end of the file.
+SEEK_SET : It denotes starting of the file.
+SEEK_CUR : It denotes file pointer’s current position.
+
+The rewind function sets the file position indicator for the stream pointed to by stream to the beginning of the file. It is equivalent to
+(void)fseek(stream, 0L, SEEK_SET)
+except that the error indicator for the stream is also cleared.
+
+But there is no way to check whether the rewind() was successful.
+  rewind(fp);  /* no way to check if rewind is successful */
+In the above code, fseek() can be used instead of rewind() to see if the operation succeeded. Following lines of code can be used in place of rewind(fp);
+if ( fseek(fp, 0L, SEEK_SET) != 0 ) {
+  /* Handle repositioning error */
+}
+
+
+
+fsetpos() (Set File Position) in C
+The fsetpos() function moves the file position indicator to the location specified by the object pointed to by position. When fsetpos() is executed ,the end-of-file indecator is reset.
+Declaration
+int fsetpos(FILE *stream, const fpos_t *position)
+Parameters –
+stream – This is the pointer to a FILE object that identifies the stream.
+position – This is the pointer to a fpos_t object containing a position previously obtained with fgetpos.
+Return – If it successful, it return zero otherwise returns nonzero value.
+
+ftell() in C is used to find out the position of file pointer in the file with respect to starting of the file. Syntax of ftell() is:
+long ftell(FILE *pointer)
+
+
+fwrite and fread make task easier when you want to write and read blocks of data.
+
+fwrite : Following is the declaration of fwrite function
+size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream)
+ptr - This is pointer to array of elements to be written
+size -  This is the size in bytes of each element to be written
+nmemb - This is the number of elements, each one with a size of size bytes
+stream - This is the pointer to a FILE object that specifies an output stream
+
+fread : Following is the declaration of fread function
+size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
+ptr - This is the pointer to a block of memory with a minimum size of size*nmemb bytes.
+size - This is the size in bytes of each element to be read.
+nmemb - This is the number of elements, each one with a size of size bytes.
+stream - This is the pointer to a FILE object that specifies an input stream.
+
+
+The remove function in C/C++ can be used to delete a file. The function returns 0 if files is deleted successfully, other returns a non-zero value.
+
+Using remove() function in C, we can write a program which can destroy itself after it is compiled and executed.
+
+Explanation: This can be done using the remove function in C. Note that, this is done in Linux environment. So, the remove function is fed the first parameter in command line argument i.e. a.out file (executable file) created after compiling . Hence the program will be destroyed.
+#include<stdio.h> 
+#include<stdlib.h> 
+int main(int c, char *argv[])
+{
+    printf("By the time you will compile me I will be destroyed \n");
+   // array of pointers to command line arguments
+    remove(argv[0]);
+  // Note: argv[0] will contain the executable file i.e. 'a.out'
+
+return 0;
+}
+Output:
+By the time you will compile me I will be destroyed
+After the output shown above, the a.out file will be removed.
+
+
+
+rename function in C/C++
+rename() function is used to change the name of the file or directory i.e. from old_name to new_name without changing the content present in the file. This function takes name of the file as its argument.
+If new_name is the name of an existing file in the same folder then the function may either fail or override the existing file, depending on the specific system and library implementation.
+Syntax:
+
+int rename (const char *old_name, const char *new_name);
+Parameters:
+old_name : Name of an existing file to be renamed.
+new_name : String containing new name of the file.
+Return:
+Return type of function is an integer. If the file is renamed successfully, zero is returned. On failure, a nonzero value is returned.
+
+tmpfile() function in C
+In C Programming Language, the tmpfile() function is used to produce/create a temporary file.
+tmpfile() function is defined in the “stdio.h” header file.
+The created temporary file will automatically be deleted after the termination of program.
+It opens file in binary update mode i.e., wb+ mode.
+The syntax of tmpfile() function is:
+FILE *tmpfile(void)
+The tmpfile() function always returns a pointer after the creation of file to the temporary file. If by chance temporary file can not be created, then the tmpfile() function returns NULL pointer.
+
+
+
+
+
+
+
+
+
