@@ -29,3 +29,7 @@ int main(){
 
 return 0;
 }
+
+//
+// this is client
+// we are sending to server  

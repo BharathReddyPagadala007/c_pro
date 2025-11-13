@@ -18,3 +18,21 @@ int main() {
     return 0;
 }
 
+///////////////////////////////
+//
+//
+//   ipcs 
+/* 
+ *
+ * IPCS(1)                                                                 User Commands                                                                IPCS(1)
+
+NAME
+       ipcs - show information on IPC facilities
+
+SYNOPSIS
+       ipcs [options]
+
+DESCRIPTION
+       ipcs shows information on System V inter-process communication facilities. By default it shows information about all three resources: shared memory
+       segments, message queues, and semaphore arrays.
+*/

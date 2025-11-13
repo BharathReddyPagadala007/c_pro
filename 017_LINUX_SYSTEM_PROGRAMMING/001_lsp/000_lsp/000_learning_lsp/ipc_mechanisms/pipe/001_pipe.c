@@ -49,7 +49,7 @@ return 0;
 }
 
 ///////////////////////////////////////////
-// why are using two buf separetely declared  inside parents and child prc
+// why are we using two buf separetely declared  inside parents and child prc
 // process
 //
 //

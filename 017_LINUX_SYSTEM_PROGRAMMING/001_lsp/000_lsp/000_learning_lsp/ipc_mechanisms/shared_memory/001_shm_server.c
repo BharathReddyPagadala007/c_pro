@@ -20,7 +20,7 @@ int main(){
       *  void *shmat(int shmid, const void *shmaddr, int shmflg);
       */
 
-     printf("waiting for message for client \n");
+     printf("waiting for message from the  client \n");
      printf("receiver :: %s\n",shmptr);
 
 
@@ -28,3 +28,11 @@ int main(){
 
 return 0;
 }
+
+
+// this is server
+// we are recieving message from the client
+// we are going to  print the message 
+// the disadvantage with shared memory it doesnt block even if there is no message to read or 
+//  it just prints the message from the shared memory if its present
+//

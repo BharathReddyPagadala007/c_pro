@@ -32,7 +32,7 @@ int main() {
 
     printf("Receiver: Waiting for a message...\n");
 
-msgrcv(msgid, &msg, sizeof(msg.msg_text), 0, 0);
+ msgrcv(msgid, &msg, sizeof(msg.msg_text), 0, 0);
  printf("Receiver: Message received successfully: Type=%ld, Text=%s\n", msg.msg_type, msg.msg_text);
 
     return 0;
