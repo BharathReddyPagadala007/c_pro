@@ -33,3 +33,11 @@ int main(){
 return 0;
 
 }
+
+
+////////////////////////////////////////////////
+//
+//
+//   in mutex what is priority inheritance ? explain 
+//
+//   is binary semaphore same as mutex lock ? explain

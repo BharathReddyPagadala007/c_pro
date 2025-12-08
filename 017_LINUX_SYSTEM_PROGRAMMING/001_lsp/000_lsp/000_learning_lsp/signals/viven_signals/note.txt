@@ -1,0 +1,6 @@
+cat /proc/1234/status | grep '^Sig'
+
+cat /proc/1234/status
+
+
+here instead 1234 use PID of the process

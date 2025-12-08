@@ -1,0 +1,1 @@
+ the first two programs dont work as expected , find it out

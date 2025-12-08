@@ -24,7 +24,7 @@ int main(){
 
 	while(1){
 	
-		printf("about tp pause the process and wait for a signal\n");
+		printf("about to pause the process and wait for a signal\n");
 	 pause();
 	}
 

@@ -4,8 +4,6 @@
 #include<fcntl.h>
 #include<unistd.h>
 
-
-
 #define CHUNK_SIZE 1024
 #define MAX_THREADS 4	
 
@@ -16,39 +14,20 @@ typedef struct{
 	size_t size;
 }ThreadData;
 
-
+//-------------------------------------------------
 void* copy_chunk(void* arg){
 	ThreadData* data = (ThreadData*)arg;
 	char* buffer = (char*)malloc(data->size);
 
-
-
 	lseek(data->src_fd,data->offset, SEEK_SET);
 
-
-
-
-
  ssize_t bytes_read = read(data->src_fd,buffer,data->size);
-
-
  ssize_t bytes_written = write(data->dest_fd, buffer, bytes_read);
 
  free(buffer);
  return NULL;
-
 }
-
-
-
-
-
-
-
-
-
-
-
+//-------------------------------------------------
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
@@ -58,9 +37,9 @@ int main(int argc, char* argv[]) {
 
 
 
-     int src_fd = open(argv[1], O_RDONLY);
+        int src_fd = open(argv[1], O_RDONLY);
 
-      int dest_fd = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      	int dest_fd = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
 off_t file_size = lseek(src_fd, 0, SEEK_END);
     if (file_size < 0) {

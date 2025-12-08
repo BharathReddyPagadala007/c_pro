@@ -4,7 +4,7 @@
 
 void* print_id_thread(void* arg){
 
-	printf("%lu iii\n",pthread_self());
+	printf("%lu  <-- ID \n",pthread_self());
 
 
 
@@ -13,6 +13,9 @@ int main(){
 
 	pthread_t pthread1;
 	pthread_t pthread2;
+
+
+	printf("main:: %lu  <-- ID \n",pthread_self());
 
 
 	pthread_create(&pthread1,NULL,print_id_thread,NULL);

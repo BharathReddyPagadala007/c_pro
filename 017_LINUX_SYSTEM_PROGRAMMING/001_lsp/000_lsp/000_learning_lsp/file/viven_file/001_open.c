@@ -12,7 +12,6 @@ int main(){
 	write(fd,"hello world\n",13);
 
 	close(fd);
-	return 0;
 
 
 return 0;

@@ -3,8 +3,6 @@
 #include<pthread.h>
 
 
-	#define NUM_ITERATIONS 1000000
-
 
 
 

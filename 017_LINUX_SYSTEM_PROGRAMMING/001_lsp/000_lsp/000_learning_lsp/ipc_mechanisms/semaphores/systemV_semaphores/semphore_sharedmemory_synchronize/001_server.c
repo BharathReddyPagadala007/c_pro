@@ -5,7 +5,6 @@
 #include<sys/types.h>
 
 #define SHM_KEY 18965
-
 #define SEM_KEY 19865
 
 
