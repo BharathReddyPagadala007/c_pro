@@ -5,6 +5,7 @@
 void reverse_letters(char str[], int start , int end);
 void reverse(char str[], int start , int end);
 
+//===================================================================
 #include<stdio.h>
 #include<string.h>
 int main()
@@ -18,6 +19,7 @@ return 0;
 }
 
 
+//===================================================================
 void reverse_letters(char str[], int start , int end)
 {
     int w_start  ,w_end;
@@ -40,6 +42,7 @@ void reverse_letters(char str[], int start , int end)
     }
 
 }
+//===================================================================
 void reverse(char str[], int start , int end)
 {
   char temp;
@@ -54,3 +57,4 @@ void reverse(char str[], int start , int end)
   }
 
 }
+//===================================================================

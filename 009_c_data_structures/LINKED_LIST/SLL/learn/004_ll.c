@@ -55,7 +55,7 @@ void display(struct Node** phead){
 int main(){
 
 
-	struct Node* head = NULL;
+	struct Node* head = NULL;  // if u dont initialise it with NULL , segfault occurs
 
 	insert_at_end(&head,10);
 	insert_at_end(&head,11);

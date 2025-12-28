@@ -1,7 +1,10 @@
 #include<stdio.h>
 #include<stdlib.h>
-
+#include<sys/stat.h>
+#include<fcntl.h>
 #include<unistd.h>
+#include<sys/wait.h>
+
 
 
 
@@ -42,28 +45,50 @@ int main(){
   
   }else{
   
-	  printf("fork success");
+	  printf("fork success\n");
   }
 	     
 
   if(pid==0){
-    printf("===========================\n");
-    printf("ur in child process\n");
-    printf("pid -->%d\n",pid);
-    printf("%d\n",getpid());
+ /*
+    printf("CHILD::===========================\n");
+    printf("CHILD::ur in child process\n");
+    printf("CHILD::pid -->%d\n",pid);
+    printf("CHILD::%d\n",getpid());
     //printf("%d\n",getppid)();
-    printf("===========================\n");
+    printf("CHILD::===========================\n");
+*/
+    char buf[20]={0};
+    close(fds[1]);  //closing write fd
+    open(fds[0]);
+    printf("CHILD::waiting for parent to enter message\n");
+    read(fds[0],buf,20);
+    printf("CHILD::received message = %s\n",buf);
+    close(fds[0]);
+    open(fds[1]);
+
+
+
   
   }
   else{
+ /* 
+    printf("PARENT::===========================\n");
+    printf("PARENT::pid -->%d\n",pid);
+    printf("PARENT::ur in parent process  processi---> \n");
+    printf("PARENT::%d\n",getpid());
   
-    printf("===========================\n");
-    printf("pid -->%d\n",pid);
-    printf("ur in parent process  processi---> \n");
-    printf("%d\n",getpid());
-  
-    printf("===========================\n");
-  
+    printf("PARENT::===========================\n");
+  */
+
+
+  char buf[20]= {0};
+
+  close(fds[0]); //close read fd
+  printf("PARENT::enter message to be sent for child :\n");
+  write(fds[1],buf,20);
+  printf("PARENT::mesage sent\n");
+
   }
 
   

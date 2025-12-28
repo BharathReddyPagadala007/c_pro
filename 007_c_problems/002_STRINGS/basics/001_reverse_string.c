@@ -20,6 +20,7 @@ int main()
     str[i]=str[j];
     str[j]= temp;
    }
+
    /*
     * int start=0,end=len -1;
     *

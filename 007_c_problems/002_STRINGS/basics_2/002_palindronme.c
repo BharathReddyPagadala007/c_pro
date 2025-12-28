@@ -12,9 +12,10 @@ int main()
   fgets(str,sizeof(str),stdin);
 
   str[strcspn(str,"\n")]  ='\0';
-  //fgets After reading the string with fgets, you should remove the trailing newline character (\n) if it exists. This  // can be done by replacing the newline character with '\0'
-  //
-  //
+  //fgets After reading the string with fgets, 
+  //you should remove the trailing newline character (\n) if it exists. 
+  //This  can be done by replacing the newline character with '\0'
+ 
   
   puts(str);
 

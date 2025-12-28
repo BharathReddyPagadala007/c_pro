@@ -8,8 +8,10 @@
 #include<stdio.h>
 #include<string.h>
 
+//=============================================================
 int count(char str[],char ch);
 void replace(char str[], char ch, char new);
+//=============================================================
 int main()
 {
  char str[50];
@@ -22,6 +24,7 @@ int main()
 return 0;
 }
 
+//=============================================================
 int count(char str[],char ch)
 {
    int cnt=0;
@@ -31,6 +34,7 @@ int count(char str[],char ch)
    }
 return cnt;
 }
+//=============================================================
 void replace(char str[], char ch, char new)
 {
    while(*str++ != '\0')
@@ -41,3 +45,4 @@ void replace(char str[], char ch, char new)
        }
    }
 }
+//=============================================================

@@ -16,12 +16,13 @@ int main(){
 	printf("shared memory segment craeted with id :: %d\n",shmid);
 
 	void* shm_ptr = shmat(shmid,NULL,0);
-	 printf("Shared memory segment attached at address: %p\n", shm_ptr);
+        printf("Shared memory segment attached at address: %p\n", shm_ptr);
 
-	    char *data = (char *)shm_ptr;
-    snprintf(data, SHM_SIZE, "Hello from shared memory!");
+	char *data = (char *)shm_ptr;  //segmentation faulty
+        snprintf(data, SHM_SIZE, "Hello from shared memory!");
 
     /*
+     *
   if (shmdt(shm_ptr) == -1) {
         perror("shmdt failed");
         exit(1);
@@ -30,3 +31,4 @@ int main(){
 */
 return 0;
 }
+//===========================================================================

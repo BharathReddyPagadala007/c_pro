@@ -59,6 +59,7 @@ struct Node*  reverse(struct Node* head){
 	return prev;
 
 }
+//--------==================================================================
 void print_list(struct Node* head){
 
 	struct Node* temp = head;

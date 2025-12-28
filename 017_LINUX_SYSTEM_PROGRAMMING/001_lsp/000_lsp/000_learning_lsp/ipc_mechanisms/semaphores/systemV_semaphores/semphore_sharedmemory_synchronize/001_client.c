@@ -19,6 +19,7 @@ int main(){
    semid = semget(SEM_KEY,2,0);
    shmptr = shmat(shmid,NULL,0);
 
+   while(1){
    printf("enter the message for server::\n");
    scanf("%s",shmptr);
 
@@ -28,6 +29,8 @@ int main(){
 
    printf("message sent\n");
    semop(semid,&smop,1);
+   printf("======================================\n");
+   }
 
    
 

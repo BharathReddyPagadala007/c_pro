@@ -31,6 +31,6 @@ int main()
   }
   str[index]= '\0';
 
-  printf("afytter removing duplicates::: %s\n",str);
+  printf("after removing duplicates::: %s\n",str);
 return 0;
 }

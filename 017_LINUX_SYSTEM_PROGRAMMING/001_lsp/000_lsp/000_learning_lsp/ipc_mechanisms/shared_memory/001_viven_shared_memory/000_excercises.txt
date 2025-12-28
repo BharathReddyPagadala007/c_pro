@@ -1,0 +1,22 @@
+51. 	Write a C program that initializes a shared memory segment using shmget.
+ans:    shmget
+==============================================================================================
+52. 	Develop a program that attaches to a previously created shared memory segment 
+	using shmat and detaches using shmdt. 
+ans:    shmat , shmdt
+==============================================================================================
+53. 	Create a program that forks multiple processes, and each process communicates using 
+	shared memory. 
+ans:    
+==============================================================================================
+54. 	Write a program that dynamically creates shared memory segments based on user 
+	input. 
+
+==============================================================================================
+55. 	Create a program that monitors and displays the usage statistics of shared memory 
+	segments, such as the amount of memory used and the number of attached processes. 
+
+==============================================================================================
+56. 	Design a program that dynamically resizes a shared memory segment based on 
+	changing requirements. 
+==============================================================================================

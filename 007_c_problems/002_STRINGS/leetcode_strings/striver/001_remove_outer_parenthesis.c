@@ -1,6 +1,8 @@
+
 #include <stdio.h>
 #include <string.h>
 
+//==============================================================
 char* removeOuterParentheses(char* s) {
     int level = 0;
     int n = strlen(s);
@@ -24,6 +26,7 @@ char* removeOuterParentheses(char* s) {
     return result;
 }
 
+//==============================================================
 int main() {
     char s[] = "(()())(())";
     char* result = removeOuterParentheses(s);
@@ -31,4 +34,7 @@ int main() {
     free(result); // Free allocated memory
     return 0;
 }
+
+//==============================================================
+
 

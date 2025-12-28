@@ -1,5 +1,5 @@
 /*
- Convert Lowercase to Uppercase and Vice Versa
+Convert Lowercase to Uppercase and Vice Versa
 Write a function to convert all lowercase letters to uppercase and vice versa.
 Example:
 Input: "Hello World"

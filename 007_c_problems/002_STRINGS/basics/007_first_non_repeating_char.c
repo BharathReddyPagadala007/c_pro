@@ -20,7 +20,7 @@ int main()
 
   for(i=0;i<len-1;i++)
   {
- //   select an elemenyt and check if it  repeats  
+ //   select an element and check if it  repeats  
       
 	  for(j=0;j<len -1;j++)
 	  {

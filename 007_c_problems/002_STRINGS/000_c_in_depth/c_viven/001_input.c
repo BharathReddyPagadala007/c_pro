@@ -4,6 +4,7 @@
 int main() {
     char str[100];
     
+ //=========================================================================================
     // Method 1: Using fgets (Safe Way)
     printf("Enter a string using fgets: ");
     fgets(str, sizeof(str), stdin);
@@ -22,6 +23,7 @@ int main() {
     gets(str);
     printf("Using gets: %s\n", str); // Avoid using gets()
 
+ //=========================================================================================
     // Method 4: Printing Character by Character using for loop
     printf("\nString printed character by character: ");
     for (int i = 0; str[i] != '\0'; i++) {
@@ -38,6 +40,7 @@ int main() {
     }
     printf("\n");
 
+ //=========================================================================================
     return 0;
 }
 

@@ -1,3 +1,7 @@
+///////////////////////////////////////////////////////
+//
+//   leetcode 92 reverse a likedlist II  
+//   -------------------------------------------
 #include<stdio.h>
 #include<stdlib.h>
 
@@ -113,16 +117,17 @@ struct Node* reverse(struct Node** phead){
 
 	return prev;
 }
+//===========================
 
 struct Node* reverse_left_right(struct Node** phead,int left, int right ){
 
-	struct Node dummy ;
+	struct Node dummy ;   // dummy->head->.........
 	dummy.next = *phead;
 
-	struct Node* prevLeft = &dummy;
+	struct Node* prevLeft = &dummy;   // prevleft points to dummy , 
 
 	for(int i=1; i<left; ++i){
-		prevLeft = prevLeft->next;
+		prevLeft = prevLeft->next;  //prevLeft points to start of the sublist to be reversed
 	}
 
 	struct Node* const reverseHead= prevLeft;  // this is node that points to starting node of reversed list (after reversal)
@@ -154,9 +159,9 @@ struct Node* reverse_left_right(struct Node** phead,int left, int right ){
        return dummy.next;
 
 
-
-
 }
+
+//===========================
 
 ///////////////////////////////////////////////////////
 int main(){

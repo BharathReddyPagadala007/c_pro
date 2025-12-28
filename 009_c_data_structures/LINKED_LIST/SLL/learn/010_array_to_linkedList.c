@@ -66,11 +66,7 @@ int main(){
 
     print_list(p);
 
-
     free_list(p);
-
-
-
 
 return 0;
 }

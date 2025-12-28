@@ -11,9 +11,10 @@ void  insert_at_begin(struct Node** phead, int value){
 
 	struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
 	newNode->data = value;
-	newNode->next = NULL;
+	/*
+	newNode->next = NULL;  //infact even if so  *phead is NULL 
 	
-	
+	*/
 		newNode->next = *phead;
 		*phead = newNode;
 

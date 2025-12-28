@@ -25,11 +25,13 @@ int main(){
    smop.sem_op=-1;
    smop.sem_flg =0;
 
+   while(1){
    printf("waiting for client message \n");
    semop(semid,&smop,1);
 
    printf("message from client : %s\n",shmptr);
-   
+   printf("=========================================\n");
+   }
 
 return 0;
 }

@@ -15,24 +15,22 @@ Output: True
 
 int main()
 {
-	int i,j;
-  char str[] = "radar";
+	 int i,j;
+	 char str[] = "radar";
 
-  i=0;
-  j=strlen(str)-1;
- int is_palindrome =1; 
+  	i=0;
+  	j=strlen(str)-1;
+ 	int is_palindrome =1; 
+
   while(i<j)
   {
-    if(str[i]!= str[j])
-    {
+    if(str[i]!= str[j]){ 
 	    is_palindrome =0;
-    }
-	    
- i++;
-j--; 
+    }//if
+
+    i++; j--; 
   }
-if(is_palindrome)
-{
+if(is_palindrome){
 	printf("its a palindrome ");
 }
 else{

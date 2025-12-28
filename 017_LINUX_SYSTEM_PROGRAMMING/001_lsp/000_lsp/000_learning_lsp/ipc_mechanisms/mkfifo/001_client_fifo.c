@@ -5,6 +5,7 @@
 #include<sys/ipc.h>
 
 
+#define FIFO_PATH   "tmp/myfifo1"
 
 void main(){
 
@@ -12,7 +13,7 @@ void main(){
 	int fd;
 	int ret;
 
-        fd = open("fifoobj",O_WRONLY);
+        fd = open(FIFO_PATH,O_WRONLY);
 	if(fd<0){
 		printf("failed toopen fifo obj\n");
 		return;

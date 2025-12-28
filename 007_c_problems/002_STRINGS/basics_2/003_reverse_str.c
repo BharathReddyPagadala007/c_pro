@@ -1,4 +1,4 @@
-//program that takjes  a string as a n argument and reverses it. write another
+//program that takes  a string as a n argument and reverses it. write another
 //write another function to reverse a portion only
 //
 #include<stdio.h>
@@ -34,7 +34,7 @@ void reverseStr(char str[])
   }
 }
 
-
+//=========================================================
 void reverse(char str[],int start, int end)
 {
   int i,j;
@@ -50,3 +50,4 @@ void reverse(char str[],int start, int end)
   }
 }
 
+//=========================================================

@@ -21,9 +21,7 @@ main(int argc, char* argv[]){
 
 	cpid = fork();
 	if(cpid == -1){
-
 		perror("fork");
-
 		exit(EXIT_FAILURE);
 	}
 
@@ -47,14 +45,10 @@ main(int argc, char* argv[]){
 
 		close(pipefd[0]);
 		write(pipefd[1],argv[1], strlen(argv[1]));
-			write(STDOUT_FILENO,"\n",1);
+		write(STDOUT_FILENO,"\n",1);
 		close(pipefd[1]);
 		wait(NULL);
 		exit(EXIT_SUCCESS);
-
-	
-	
-	
 	}
 
 return 0;

@@ -50,6 +50,7 @@ void insert_at_end(struct node** phead, int value){
 	new_node->prev= temp;
 }
 
+//==============================================================
 
 void display_forward(struct node * head){
 	struct node* temp=head;

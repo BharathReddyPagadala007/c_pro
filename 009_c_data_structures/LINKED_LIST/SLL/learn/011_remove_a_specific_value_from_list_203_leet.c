@@ -50,6 +50,7 @@ void free_list(struct Node* head){
 		free(temp);
 	}
 }
+//------------------------------------------------------------
 struct Node* remove_element(struct Node* head,int val){
 
 	struct Node dummy;
@@ -69,6 +70,7 @@ struct Node* remove_element(struct Node* head,int val){
 	}
 return dummy.next;
 }
+//------------------------------------------------------------
 
 int main(){
    struct Node* head = NULL;

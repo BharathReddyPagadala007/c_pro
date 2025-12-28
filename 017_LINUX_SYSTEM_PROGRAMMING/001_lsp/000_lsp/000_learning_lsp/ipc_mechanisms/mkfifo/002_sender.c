@@ -9,7 +9,8 @@
 
 int main(){
 
-  char message[] = " hellow from sender ";
+  char message[20];
+  //char message[] = " hellow from sender ";
 
   int fd;
 
@@ -20,6 +21,7 @@ int main(){
   fd = open(FIFO_PATH,O_WRONLY);
 
   printf("sender :: writing message to fifo:: \n");
+  scanf("%s", message);
 
   write(fd,message,strlen(message)+1);
 

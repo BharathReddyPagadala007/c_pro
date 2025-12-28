@@ -1,6 +1,13 @@
 //reverse_letters()
 //  i have many books
 //  i evah ynam skoob
+//  ---------------------
+//  reverse_words()
+//  books many have i
+//  ----------------------
+//  i have many books
+//  skoob ynam evah i  -- reverse()
+//  books many have i  -- reverse_lettsers()
 
 void reverse_letters(char str[], int start , int end);
 void reverse(char str[], int start , int end);

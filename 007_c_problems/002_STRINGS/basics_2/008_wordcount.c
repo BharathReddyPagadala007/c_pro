@@ -2,7 +2,9 @@
 #include<ctype.h>
 
 
+//=============================================================
 int count_words(char * str);
+//=============================================================
 int main()
 {
   char str[50]  = "blue green red";
@@ -10,6 +12,7 @@ int main()
 
 return 0;
 }
+//=============================================================
 
 int count_words(char * str)
 {
@@ -23,8 +26,7 @@ int count_words(char * str)
      {  str++;
      }
 
-     if(*str == '\0')
-    {	 return count;}
+     if(*str == '\0'){	 return count; }
 
      while( !isspace(*str) && *str != '\0')
      {
@@ -34,7 +36,7 @@ int count_words(char * str)
      count++;
      printf("\n");
 
-   }
-
+   }//while
 return count;
 }
+//=============================================================

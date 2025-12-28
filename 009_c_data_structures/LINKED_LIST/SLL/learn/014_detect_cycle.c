@@ -52,7 +52,7 @@ void free_list(struct Node* head){
 	}
 }
 
-
+//===================================================================================
 void detect_cycle(struct Node** phead){
 
 	struct Node* head = *phead;
@@ -69,8 +69,10 @@ void detect_cycle(struct Node** phead){
 	}else{
 	printf("no cycle detected\n");
 	}
-	}
+
+	} //while 
 }
+//===================================================================================
 
 int main(){
    struct Node* head = NULL;

@@ -51,6 +51,7 @@ void free_list(struct Node* head){
 		free(temp);
 	}
 }
+//-------------------------------------------------------------------------
 void remove_middle(struct Node** phead){
 
 	struct Node* prev = NULL;
@@ -74,6 +75,7 @@ void remove_middle(struct Node** phead){
 
 
 }
+//-------------------------------------------------------------------------
 
 int main(){
    struct Node* head = NULL;

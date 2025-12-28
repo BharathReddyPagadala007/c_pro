@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 
 
+#define FIFO_PATH   "tmp/myfifo1"
 void main(){
 
 	char buf[64];
@@ -16,7 +17,7 @@ void main(){
        //fd = open("/tmp/fifoobj",O_RDONLY);
 
 //	if(fd<0){
-		if((ret= mkfifo("fifoobj",0666))<0)
+		if((ret= mkfifo(FIFO_PATH,0666))<0)
 		{
 	         printf("error creating fifo object \n");
 		 return ;

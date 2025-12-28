@@ -1,0 +1,19 @@
+topics :
+-----------------------------------------
+	linux kernel internals
+
+	linux kernel programming
+	
+	linux device driver development
+	
+	embedded linux 
+
+
+-----------------------------------------
+
+books:
+robert love - linux kernel development
+john corbet - lddd 
+
+
+-----------------------------------------
