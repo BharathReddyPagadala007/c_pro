@@ -18,13 +18,18 @@ int main(){
 	int a=5, b=7;
 
 	int carry;
+	 printf("a= "); print_bit_pattern(a); printf("\n");
+	 printf("b= "); print_bit_pattern(b); printf("\n");
+	 printf("===============================================\n");
 
 	while(b!=0){
 	 carry = a&b;
+	 printf("c= "); print_bit_pattern(carry); printf("\n");
 	 a= a^b;
 	 b = carry<<1;
 	 printf("a= "); print_bit_pattern(a); printf("\n");
 	 printf("b= "); print_bit_pattern(b); printf("\n");
+	 printf("===============================================\n");
 	}
 
 	printf("sum i s--> %d\n",a);

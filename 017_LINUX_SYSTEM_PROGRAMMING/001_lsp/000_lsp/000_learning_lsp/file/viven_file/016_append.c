@@ -6,7 +6,7 @@
 int main(){
 
 	int fd;
-	char* msg = "good bye\n";
+	char* msg = "appending\n";
 
 	
 	fd = open("source.txt",O_WRONLY | O_APPEND);

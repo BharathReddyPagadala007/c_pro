@@ -1,29 +1,26 @@
 #include<stdio.h>
 #include<stdlib.h>
 
+//===========================================================
 struct Node{
   int data;
   struct Node* next;
 };
 
 
+//===========================================================
 void  insert_at_begin(struct Node** phead, int value){
 
 	struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
 	newNode->data = value;
 	/*
 	newNode->next = NULL;  //infact even if so  *phead is NULL 
-	
 	*/
 		newNode->next = *phead;
 		*phead = newNode;
-
-
-
 }
 
-
-
+//===========================================================
 
 void display(struct Node** phead){
 	struct Node* temp = *phead;
@@ -43,6 +40,7 @@ void display(struct Node** phead){
 
 
 }
+//==========================================================================
 int main(){
 
 
@@ -61,3 +59,4 @@ int main(){
 
 return 0;
 }
+//==========================================================================

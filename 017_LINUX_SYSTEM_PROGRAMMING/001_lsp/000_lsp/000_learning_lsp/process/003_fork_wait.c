@@ -41,6 +41,8 @@ int main(){
 	
 	}
 
+//	printf("child exited with exit satus  %d\n",WEXITSTATUS(&stat));
+
 return 0;
 }
 

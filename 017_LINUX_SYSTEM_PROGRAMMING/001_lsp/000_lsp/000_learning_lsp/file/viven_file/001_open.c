@@ -8,8 +8,8 @@
 int main(){
 	int fd = open("001_example.txt",O_CREAT | O_WRONLY | O_TRUNC,0644);
 
-//	const char* str = "hello world\n";
-	write(fd,"hello world\n",13);
+//	const char* str = "hello worldi\n";
+	write(fd,"hello worldi\n",14);
 
 	close(fd);
 

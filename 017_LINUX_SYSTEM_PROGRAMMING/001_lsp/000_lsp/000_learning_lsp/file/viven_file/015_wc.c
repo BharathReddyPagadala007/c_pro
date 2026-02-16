@@ -6,12 +6,12 @@
 
 #define BUF_SIZE 1024
 
+//===========================================================
 int main(){
 
 	int fd, bytes_read;
 	char buffer[BUF_SIZE];
 	int line_count =0;
-
 
 	fd= open("source.txt",O_RDONLY);
 
@@ -26,7 +26,6 @@ int main(){
 	}
 
 	char count_str[20];
-
 	int len = sprintf(count_str,"%d\n",line_count);
 	write(1,count_str,len);
 	close(fd);
@@ -34,3 +33,4 @@ int main(){
 
 return 0;
 }
+//===========================================================

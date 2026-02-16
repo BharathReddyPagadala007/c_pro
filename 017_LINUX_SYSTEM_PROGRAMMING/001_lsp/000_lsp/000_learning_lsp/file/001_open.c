@@ -57,3 +57,16 @@ int main()
 
 return 0;
 }
+
+
+//==========================================================
+//  open() system call 
+//  on success   returns fd
+//  on failure  -1
+//
+//  open(filename,modes,permission)
+//  ---------------------------------------------
+//  filename
+//  modes
+//  permission
+//

@@ -1,0 +1,10 @@
+SRC := $(shell ls *.c)
+
+show:
+	@echo $(SRC)
+	@echo "============================="
+
+CC= gcc
+
+all:
+	$(CC) $(SRC) -o hello2
